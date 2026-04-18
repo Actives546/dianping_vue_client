@@ -215,10 +215,10 @@ onMounted(() => {
 }
 
 .home-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #ff8c5a 100%);
+  background: linear-gradient(135deg, #4a90e2 0%, #6bb3f0 100%);
   padding: 16px;
   padding-top: calc(16px + env(safe-area-inset-top));
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 .search-bar {
