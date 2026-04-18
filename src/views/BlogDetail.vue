@@ -13,7 +13,7 @@
         <div class="blog-header">
           <div class="author-info">
             <div class="avatar" v-if="blog.icon">
-              <img :src="blog.icon" :alt="blog.name" />
+              <img :src="blog.icon" :alt="blog.name" /> 
             </div>
             <div class="avatar-placeholder" v-else>
               <span class="avatar-text">{{ (blog.name || '用户').charAt(0) }}</span>
@@ -25,8 +25,8 @@
           </div>
           
           <div class="blog-stats" v-if="blog.liked || blog.comments">
-            <span class="stat-item">
-              <span class="stat-icon">❤️</span>
+            <span class="stat-item like-stat" @click="likeBlog">
+              <span class="stat-icon" :class="{ 'liked': isBlogLiked }">❤️</span>
               <span class="stat-value">{{ blog.liked || 0 }}</span>
             </span>
             <span class="stat-item">
@@ -107,7 +107,7 @@
               </div>
               <div class="comment-actions">
                 <span class="like-btn" @click="likeComment(comment)">
-                  <span class="like-icon">👍</span>
+                  <span class="like-icon" :class="{ 'liked': comment.isLiked }">👍</span>
                   <span class="like-count">{{ comment.liked || 0 }}</span>
                 </span>
                 <span class="reply-btn" @click="replyToComment(comment)">回复</span>
@@ -182,7 +182,7 @@
       </button>
     </div>
     
-    <div class="toast" :class="{ show: showToast }">
+    <div class="toast" :class="{ show: showToast, success: toastType === 'success', error: toastType === 'error' }">
       {{ toastMessage }}
     </div>
   </div>
@@ -207,11 +207,14 @@ const loadingBlog = ref(false)
 const loadingComments = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
+const toastType = ref('')
 const commentContent = ref('')
 const submittingComment = ref(false)
 const currentUser = ref(null)
 const replyingTo = ref(null)
 const replyingParent = ref(null)
+const isBlogLiked = ref(false)
+const blogLikeSet = ref(new Set())
 
 const replyPlaceholder = computed(() => {
   if (replyingTo.value) {
@@ -225,8 +228,9 @@ const blogImages = computed(() => {
   return blog.value.images.split(',').filter(img => img.trim())
 })
 
-const showToastMsg = (message) => {
+const showToastMsg = (message, type = 'info') => {
   toastMessage.value = message
+  toastType.value = type
   showToast.value = true
   setTimeout(() => {
     showToast.value = false
@@ -294,10 +298,10 @@ const fetchBlogDetail = async () => {
         fetchShopDetail(blog.value.shopId)
       }
     } else {
-      showToastMsg(res.errorMsg || '加载博客失败')
+      showToastMsg(res.errorMsg || '加载博客失败', 'error')
     }
   } catch (error) {
-    showToastMsg(error.message || '加载博客失败，请稍后重试')
+    showToastMsg(error.message || '加载博客失败，请稍后重试', 'error')
   } finally {
     loadingBlog.value = false
   }
@@ -338,10 +342,10 @@ const fetchComments = async (isLoadMore = false) => {
       
       hasMoreComments.value = newComments.length >= 10
     } else {
-      showToastMsg(res.errorMsg || '加载评论失败')
+      showToastMsg(res.errorMsg || '加载评论失败', 'error')
     }
   } catch (error) {
-    showToastMsg(error.message || '加载评论失败，请稍后重试')
+    showToastMsg(error.message || '加载评论失败，请稍后重试', 'error')
   } finally {
     loadingComments.value = false
   }
@@ -352,10 +356,42 @@ const loadMoreComments = () => {
   fetchComments(true)
 }
 
+const likeBlog = () => {
+  if (!currentUser.value) {
+    showToastMsg('请先登录', 'error')
+    return
+  }
+  
+  const blogKey = `blog_${blog.value.id}`
+  if (blogLikeSet.value.has(blogKey)) {
+    showToastMsg('已经点过赞了', 'info')
+    return
+  }
+  
+  showToastMsg('点赞成功', 'success')
+  if (!blog.value.liked) blog.value.liked = 0
+  blog.value.liked++
+  isBlogLiked.value = true
+  blogLikeSet.value.add(blogKey)
+}
+
 const likeComment = (comment) => {
-  showToastMsg('点赞成功')
+  if (!currentUser.value) {
+    showToastMsg('请先登录', 'error')
+    return
+  }
+  
+  const commentKey = `comment_${comment.id}`
+  if (blogLikeSet.value.has(commentKey)) {
+    showToastMsg('已经点过赞了', 'info')
+    return
+  }
+  
+  showToastMsg('点赞成功', 'success')
   if (!comment.liked) comment.liked = 0
   comment.liked++
+  comment.isLiked = true
+  blogLikeSet.value.add(commentKey)
 }
 
 const replyToComment = (comment) => {
@@ -375,12 +411,12 @@ const cancelReply = () => {
 
 const submitComment = async () => {
   if (!commentContent.value.trim()) {
-    showToastMsg('请输入评论内容')
+    showToastMsg('请输入评论内容', 'error')
     return
   }
   
   if (!currentUser.value) {
-    showToastMsg('请先登录')
+    showToastMsg('请先登录', 'error')
     return
   }
   
@@ -401,7 +437,7 @@ const submitComment = async () => {
     const res = await blogCommentApi.createComment(commentData)
     
     if (res.success) {
-      showToastMsg('评论成功')
+      showToastMsg('评论成功', 'success')
       commentContent.value = ''
       cancelReply()
       
@@ -414,10 +450,10 @@ const submitComment = async () => {
         totalComments.value = blog.value.comments
       }
     } else {
-      showToastMsg(res.errorMsg || '评论失败')
+      showToastMsg(res.errorMsg || '评论失败', 'error')
     }
   } catch (error) {
-    showToastMsg(error.message || '评论失败，请稍后重试')
+    showToastMsg(error.message || '评论失败，请稍后重试', 'error')
   } finally {
     submittingComment.value = false
   }
@@ -434,6 +470,8 @@ watch(() => route.params.id, (newId) => {
   comments.value = []
   currentPage.value = 1
   hasMoreComments.value = true
+  isBlogLiked.value = false
+  blogLikeSet.value.clear()
   fetchBlogDetail()
   fetchComments()
 })
@@ -566,10 +604,27 @@ onMounted(() => {
   gap: 4px;
   font-size: 13px;
   color: var(--text-secondary);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.stat-item:active {
+  color: var(--primary-color);
+}
+
+.stat-item.like-stat:active .stat-icon {
+  transform: scale(1.2);
+  transition: transform 0.2s;
 }
 
 .stat-icon {
   font-size: 16px;
+  transition: all 0.2s;
+}
+
+.stat-icon.liked {
+  color: var(--error-color);
+  transform: scale(1.1);
 }
 
 .blog-title {
@@ -795,6 +850,16 @@ onMounted(() => {
 
 .like-btn:active {
   color: var(--primary-color);
+}
+
+.like-btn:active .like-icon {
+  transform: scale(1.2);
+  transition: transform 0.2s;
+}
+
+.like-icon.liked {
+  color: var(--primary-color);
+  transform: scale(1.1);
 }
 
 .reply-btn {
@@ -1026,5 +1091,13 @@ onMounted(() => {
 .toast.show {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
+}
+
+.toast.success {
+  background-color: rgba(82, 196, 26, 0.95);
+}
+
+.toast.error {
+  background-color: rgba(255, 71, 87, 0.95);
 }
 </style>
