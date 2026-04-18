@@ -72,79 +72,59 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue'
 import BottomNav from '../components/BottomNav.vue'
 
-export default {
-  name: 'Publish',
-  components: {
-    BottomNav
-  },
-  setup() {
-    const selectedShop = ref(null)
-    const rating = ref(0)
-    const images = ref([])
-    const content = ref('')
-    const showToast = ref(false)
-    const toastMessage = ref('')
-    const showShopSelector = ref(false)
-    
-    const showToastMessage = (message) => {
-      toastMessage.value = message
-      showToast.value = true
-      setTimeout(() => {
-        showToast.value = false
-      }, 2000)
-    }
-    
-    const uploadImage = () => {
-      const sampleImages = [
-        'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=delicious%20food%20restaurant%20dish&image_size=square_hd',
-        'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=restaurant%20interior%20modern%20design&image_size=square_hd',
-        'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=beautiful%20food%20presentation&image_size=square_hd'
-      ]
-      if (images.value.length < 9) {
-        const randomImage = sampleImages[Math.floor(Math.random() * sampleImages.length)]
-        images.value.push(randomImage)
-      }
-    }
-    
-    const submitBlog = () => {
-      if (!selectedShop.value) {
-        showToastMessage('请选择商铺')
-        return
-      }
-      if (rating.value === 0) {
-        showToastMessage('请选择评分')
-        return
-      }
-      if (!content.value.trim()) {
-        showToastMessage('请输入内容')
-        return
-      }
-      
-      showToastMessage('发布成功')
-      setTimeout(() => {
-        selectedShop.value = null
-        rating.value = 0
-        images.value = []
-        content.value = ''
-      }, 1500)
-    }
-    
-    return {
-      selectedShop,
-      rating,
-      images,
-      content,
-      showToast,
-      toastMessage,
-      showShopSelector,
-      uploadImage,
-      submitBlog
-    }
+const selectedShop = ref(null)
+const rating = ref(0)
+const images = ref([])
+const content = ref('')
+const showToast = ref(false)
+const toastMessage = ref('')
+const showShopSelector = ref(false)
+
+const showToastMsg = (message) => {
+  toastMessage.value = message
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 2000)
+}
+
+const uploadImage = () => {
+  const sampleImages = [
+    'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=delicious%20food%20restaurant%20dish&image_size=square_hd',
+    'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=restaurant%20interior%20modern%20design&image_size=square_hd',
+    'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=beautiful%20food%20presentation&image_size=square_hd'
+  ]
+  if (images.value.length < 9) {
+    const randomImage = sampleImages[Math.floor(Math.random() * sampleImages.length)]
+    images.value.push(randomImage)
   }
+}
+
+const submitBlog = () => {
+  if (!selectedShop.value) {
+    showToastMsg('请选择商铺')
+    return
+  }
+  if (rating.value === 0) {
+    showToastMsg('请选择评分')
+    return
+  }
+  if (!content.value.trim()) {
+    showToastMsg('请输入内容')
+    return
+  }
+  
+  showToastMsg('发布成功')
+  setTimeout(() => {
+    selectedShop.value = null
+    rating.value = 0
+    images.value = []
+    content.value = ''
+  }, 1500)
 }
 </script>
 

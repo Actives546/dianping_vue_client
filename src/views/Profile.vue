@@ -82,108 +82,88 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { userApi } from '../api'
 import { getToken, removeToken } from '../utils/auth'
 import BottomNav from '../components/BottomNav.vue'
 
-export default {
-  name: 'Profile',
-  components: {
-    BottomNav
-  },
-  setup() {
-    const router = useRouter()
-    
-    const userInfo = ref({
-      id: null,
-      nickName: '',
-      icon: '',
-      phone: ''
-    })
-    
-    const stats = ref({
-      blogs: 0,
-      followers: 0,
-      following: 0
-    })
-    
-    const showToastFlag = ref(false)
-    const toastMessage = ref('')
-    
-    const defaultAvatar = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=default%20user%20avatar%20simple%20circle&image_size=square_hd'
-    
-    const maskedPhone = computed(() => {
-      if (userInfo.value.phone) {
-        return userInfo.value.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
-      }
-      return '未绑定手机号'
-    })
-    
-    const showToast = (message) => {
-      toastMessage.value = message
-      showToastFlag.value = true
-      setTimeout(() => {
-        showToastFlag.value = false
-      }, 2000)
-    }
-    
-    const fetchUserInfo = async () => {
-      if (!getToken()) {
-        router.push('/login')
-        return
-      }
-      
-      try {
-        const res = await userApi.getCurrentUser()
-        if (res.success && res.data) {
-          userInfo.value = {
-            ...userInfo.value,
-            ...res.data
-          }
-        }
-      } catch (error) {
-        console.error('获取用户信息失败:', error)
+const router = useRouter()
+
+const userInfo = ref({
+  id: null,
+  nickName: '',
+  icon: '',
+  phone: ''
+})
+
+const stats = ref({
+  blogs: 0,
+  followers: 0,
+  following: 0
+})
+
+const showToastFlag = ref(false)
+const toastMessage = ref('')
+
+const defaultAvatar = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=default%20user%20avatar%20simple%20circle&image_size=square_hd'
+
+const maskedPhone = computed(() => {
+  if (userInfo.value.phone) {
+    return userInfo.value.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+  }
+  return '未绑定手机号'
+})
+
+const showToast = (message) => {
+  toastMessage.value = message
+  showToastFlag.value = true
+  setTimeout(() => {
+    showToastFlag.value = false
+  }, 2000)
+}
+
+const fetchUserInfo = async () => {
+  if (!getToken()) {
+    router.push('/login')
+    return
+  }
+  
+  try {
+    const res = await userApi.getCurrentUser()
+    if (res.success && res.data) {
+      userInfo.value = {
+        ...userInfo.value,
+        ...res.data
       }
     }
-    
-    const goToEdit = () => {
-      showToast('编辑资料')
-    }
-    
-    const handleLogout = async () => {
-      try {
-        await userApi.logout()
-      } catch (error) {
-        console.error('退出登录失败:', error)
-      }
-      
-      removeToken()
-      showToast('已退出登录')
-      setTimeout(() => {
-        router.push('/login')
-      }, 1000)
-    }
-    
-    onMounted(() => {
-      fetchUserInfo()
-    })
-    
-    return {
-      userInfo,
-      stats,
-      showToastFlag,
-      toastMessage,
-      defaultAvatar,
-      maskedPhone,
-      showToast,
-      goToEdit,
-      handleLogout
-    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
   }
 }
+
+const goToEdit = () => {
+  showToast('编辑资料')
+}
+
+const handleLogout = async () => {
+  try {
+    await userApi.logout()
+  } catch (error) {
+    console.error('退出登录失败:', error)
+  }
+  
+  removeToken()
+  showToast('已退出登录')
+  setTimeout(() => {
+    router.push('/login')
+  }, 1000)
+}
+
+onMounted(() => {
+  fetchUserInfo()
+})
 </script>
 
 <style scoped>

@@ -38,22 +38,13 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
-export default {
-  name: 'BottomNav',
-  setup() {
-    const route = useRoute()
-    
-    const currentRoute = computed(() => route.path)
-    
-    return {
-      currentRoute
-    }
-  }
-}
+const route = useRoute()
+
+const currentRoute = computed(() => route.path)
 </script>
 
 <style scoped>

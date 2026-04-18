@@ -1,36 +1,74 @@
+import axios from 'axios'
 import { getToken } from '../utils/auth'
 
-const BASE_URL = '/api'
+const instance = axios.create({
+  baseURL: '/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
 
-async function request(url, options = {}) {
-  const token = getToken()
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers
+instance.interceptors.request.use(
+  (config) => {
+    const token = getToken()
+    if (token) {
+      config.headers['authorization'] = token
+    }
+    console.log('Request:', config.method.toUpperCase(), config.url)
+    return config
+  },
+  (error) => {
+    console.error('Request Error:', error)
+    return Promise.reject(error)
   }
-  
-  if (token) {
-    headers['authorization'] = token
+)
+
+instance.interceptors.response.use(
+  (response) => {
+    const res = response.data
+    console.log('Response:', response.config.url, res)
+    
+    if (res.success) {
+      return res
+    } else {
+      console.error('Response Error:', res.errorMsg || '请求失败')
+      return Promise.reject(new Error(res.errorMsg || '请求失败'))
+    }
+  },
+  (error) => {
+    console.error('Network Error:', error.message)
+    
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          console.error('未授权，请重新登录')
+          break
+        case 403:
+          console.error('拒绝访问')
+          break
+        case 404:
+          console.error('请求地址不存在')
+          break
+        case 500:
+          console.error('服务器内部错误')
+          break
+        default:
+          console.error(`请求错误: ${error.response.status}`)
+      }
+    } else if (error.code === 'ECONNABORTED') {
+      console.error('请求超时')
+    } else {
+      console.error('网络连接失败')
+    }
+    
+    return Promise.reject(error)
   }
-  
-  try {
-    const response = await fetch(BASE_URL + url, {
-      ...options,
-      headers
-    })
-    const data = await response.json()
-    return data
-  } catch (error) {
-    console.error('Request error:', error)
-    throw error
-  }
-}
+)
 
 export const userApi = {
   sendCode(phone) {
-    return request(`/user/code?phone=${phone}`, {
-      method: 'POST'
-    })
+    return instance.post(`/user/code?phone=${phone}`)
   },
   
   login(phone, code, password) {
@@ -41,52 +79,36 @@ export const userApi = {
     if (password) {
       body.password = password
     }
-    return request('/user/login', {
-      method: 'POST',
-      body: JSON.stringify(body)
-    })
+    return instance.post('/user/login', body)
   },
   
   logout() {
-    return request('/user/logout', {
-      method: 'POST'
-    })
+    return instance.post('/user/logout')
   },
   
   getCurrentUser() {
-    return request('/user/me', {
-      method: 'GET'
-    })
+    return instance.get('/user/me')
   },
   
   register(userData) {
-    return request('/user', {
-      method: 'POST',
-      body: JSON.stringify(userData)
-    })
+    return instance.post('/user', userData)
   }
 }
 
 export const shopApi = {
   getShopList(params = {}) {
-    const queryString = new URLSearchParams(params).toString()
-    const url = queryString ? `/shop/page?${queryString}` : '/shop/page'
-    return request(url, {
-      method: 'GET'
-    })
+    return instance.get('/shop/page', { params })
   },
   
   getShopById(id) {
-    return request(`/shop/${id}`, {
-      method: 'GET'
-    })
+    return instance.get(`/shop/${id}`)
   }
 }
 
 export const shopTypeApi = {
   getAllShopTypes() {
-    return request('/shop-type/list', {
-      method: 'GET'
-    })
+    return instance.get('/shop-type/list')
   }
 }
+
+export default instance

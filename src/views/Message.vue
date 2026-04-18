@@ -77,91 +77,74 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue'
 import BottomNav from '../components/BottomNav.vue'
 
-export default {
-  name: 'Message',
-  components: {
-    BottomNav
+const activeTab = ref('notification')
+const notificationCount = ref(2)
+const chatCount = ref(3)
+
+const notifications = ref([
+  {
+    id: 1,
+    type: 'comment',
+    title: '新评论',
+    content: '用户"美食达人"评论了你的博客："看起来很好吃！"',
+    time: '10分钟前'
   },
-  setup() {
-    const activeTab = ref('notification')
-    const notificationCount = ref(2)
-    const chatCount = ref(3)
-    
-    const notifications = ref([
-      {
-        id: 1,
-        type: 'comment',
-        title: '新评论',
-        content: '用户"美食达人"评论了你的博客："看起来很好吃！"',
-        time: '10分钟前'
-      },
-      {
-        id: 2,
-        type: 'like',
-        title: '获赞提醒',
-        content: '你的博客获得了15个赞，继续加油！',
-        time: '1小时前'
-      },
-      {
-        id: 3,
-        type: 'system',
-        title: '系统通知',
-        content: '欢迎使用点评APP，祝您使用愉快！',
-        time: '昨天'
-      }
-    ])
-    
-    const chats = ref([
-      {
-        id: 1,
-        name: '商户客服',
-        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20customer%20service%20avatar&image_size=square_hd',
-        lastMessage: '您好，有什么可以帮助您的？',
-        time: '刚刚',
-        unread: 2
-      },
-      {
-        id: 2,
-        name: '美食达人',
-        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=friendly%20user%20avatar%20food%20lover&image_size=square_hd',
-        lastMessage: '你推荐的那家店真的不错！',
-        time: '10分钟前',
-        unread: 1
-      },
-      {
-        id: 3,
-        name: '系统消息',
-        avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=system%20notification%20icon%20simple&image_size=square_hd',
-        lastMessage: '您的账户已成功绑定手机号',
-        time: '昨天',
-        unread: 0
-      }
-    ])
-    
-    const getNotificationIcon = (type) => {
-      const iconMap = {
-        comment: '💬',
-        like: '❤️',
-        system: '🔔',
-        follow: '👥',
-        activity: '🎁'
-      }
-      return iconMap[type] || '📢'
-    }
-    
-    return {
-      activeTab,
-      notificationCount,
-      chatCount,
-      notifications,
-      chats,
-      getNotificationIcon
-    }
+  {
+    id: 2,
+    type: 'like',
+    title: '获赞提醒',
+    content: '你的博客获得了15个赞，继续加油！',
+    time: '1小时前'
+  },
+  {
+    id: 3,
+    type: 'system',
+    title: '系统通知',
+    content: '欢迎使用点评APP，祝您使用愉快！',
+    time: '昨天'
   }
+])
+
+const chats = ref([
+  {
+    id: 1,
+    name: '商户客服',
+    avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20customer%20service%20avatar&image_size=square_hd',
+    lastMessage: '您好，有什么可以帮助您的？',
+    time: '刚刚',
+    unread: 2
+  },
+  {
+    id: 2,
+    name: '美食达人',
+    avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=friendly%20user%20avatar%20food%20lover&image_size=square_hd',
+    lastMessage: '你推荐的那家店真的不错！',
+    time: '10分钟前',
+    unread: 1
+  },
+  {
+    id: 3,
+    name: '系统消息',
+    avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=system%20notification%20icon%20simple&image_size=square_hd',
+    lastMessage: '您的账户已成功绑定手机号',
+    time: '昨天',
+    unread: 0
+  }
+])
+
+const getNotificationIcon = (type) => {
+  const iconMap = {
+    comment: '💬',
+    like: '❤️',
+    system: '🔔',
+    follow: '👥',
+    activity: '🎁'
+  }
+  return iconMap[type] || '📢'
 }
 </script>
 
