@@ -461,6 +461,7 @@ onMounted(() => {
 
 .profile-content {
   padding: 12px 16px;
+  padding-top: 220px;
 }
 
 .tab-content {
