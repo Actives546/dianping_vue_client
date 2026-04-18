@@ -53,14 +53,15 @@ const currentRoute = computed(() => route.path)
   bottom: 0;
   left: 0;
   right: 0;
-  height: 50px;
-  background-color: #fff;
+  height: 56px;
+  background-color: var(--background-primary);
   display: flex;
   align-items: center;
   justify-content: space-around;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-light);
   z-index: 1000;
   padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .nav-item {
@@ -70,20 +71,38 @@ const currentRoute = computed(() => route.path)
   justify-content: center;
   flex: 1;
   height: 100%;
-  color: #666;
+  color: var(--text-tertiary);
   font-size: 12px;
   cursor: pointer;
-  transition: color 0.3s;
+  transition: color var(--transition-fast);
+  position: relative;
 }
 
 .nav-item.active {
-  color: #ff6b35;
+  color: #4a90e2;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background-color: #4a90e2;
+  border-radius: 0 0 3px 3px;
 }
 
 .nav-icon {
-  font-size: 20px;
+  font-size: 24px;
   margin-bottom: 2px;
   line-height: 1;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-text {
@@ -91,22 +110,33 @@ const currentRoute = computed(() => route.path)
 }
 
 .publish-btn {
-  width: 44px;
-  height: 44px;
-  background-color: #ff6b35;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #4a90e2 0%, #6bb3f0 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: -10px;
-  box-shadow: 0 2px 10px rgba(255, 107, 53, 0.3);
+  margin-top: -16px;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  transition: all var(--transition-fast);
+}
+
+.publish-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
 }
 
 .publish-btn .nav-icon {
-  color: #fff;
-  font-size: 22px;
+  color: var(--background-primary);
+  font-size: 24px;
   margin-bottom: 0;
   font-weight: 300;
   line-height: 1;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
