@@ -6,15 +6,14 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
-      'axios': path.resolve(__dirname, 'src/utils/mock-axios.js')
+      '@': path.resolve(__dirname, 'src')
     }
   },
   server: {
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8081',
+        target: 'http://localhost:8001',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
