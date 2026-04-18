@@ -15,22 +15,22 @@
       </div>
       
       <div class="user-stats">
-        <div class="stat-item">
+        <div class="stat-item" :class="{ active: activeTab === 'notes' }" @click="switchTab('notes')">
           <span class="stat-value">{{ stats.notes }}</span>
           <span class="stat-label">笔记</span>
         </div>
         <div class="stat-divider"></div>
-        <div class="stat-item">
+        <div class="stat-item" :class="{ active: activeTab === 'reviews' }" @click="switchTab('reviews')">
           <span class="stat-value">{{ stats.reviews }}</span>
           <span class="stat-label">评价</span>
         </div>
         <div class="stat-divider"></div>
-        <div class="stat-item">
+        <div class="stat-item" :class="{ active: activeTab === 'followers' }" @click="switchTab('followers')">
           <span class="stat-value">{{ stats.followers }}</span>
           <span class="stat-label">粉丝</span>
         </div>
         <div class="stat-divider"></div>
-        <div class="stat-item">
+        <div class="stat-item" :class="{ active: activeTab === 'following' }" @click="switchTab('following')">
           <span class="stat-value">{{ stats.following }}</span>
           <span class="stat-label">关注</span>
         </div>
@@ -38,6 +38,36 @@
     </div>
     
     <div class="profile-content header-safe-area">
+      <div class="tab-content">
+        <div v-if="activeTab === 'notes'" class="tab-panel">
+          <div class="empty-state">
+            <span class="empty-icon">📝</span>
+            <span class="empty-text">暂无笔记</span>
+          </div>
+        </div>
+        
+        <div v-if="activeTab === 'reviews'" class="tab-panel">
+          <div class="empty-state">
+            <span class="empty-icon">⭐</span>
+            <span class="empty-text">暂无评价</span>
+          </div>
+        </div>
+        
+        <div v-if="activeTab === 'followers'" class="tab-panel">
+          <div class="empty-state">
+            <span class="empty-icon">👥</span>
+            <span class="empty-text">暂无粉丝</span>
+          </div>
+        </div>
+        
+        <div v-if="activeTab === 'following'" class="tab-panel">
+          <div class="empty-state">
+            <span class="empty-icon">➕</span>
+            <span class="empty-text">暂无关注</span>
+          </div>
+        </div>
+      </div>
+      
       <button class="logout-btn" @click="handleLogout">
         退出登录
       </button>
@@ -73,6 +103,12 @@ const stats = ref({
   followers: 0,
   following: 0
 })
+
+const activeTab = ref('notes')
+
+const switchTab = (tab) => {
+  activeTab.value = tab
+}
 
 const showToastFlag = ref(false)
 const toastMessage = ref('')
@@ -222,11 +258,22 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: transform var(--transition-fast);
+  transition: all var(--transition-fast);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
 }
 
 .stat-item:active {
   transform: scale(0.95);
+}
+
+.stat-item.active {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.stat-item.active .stat-value {
+  transform: scale(1.1);
 }
 
 .stat-value {
@@ -234,6 +281,7 @@ onMounted(() => {
   font-weight: 600;
   color: var(--background-primary);
   margin-bottom: 4px;
+  transition: transform var(--transition-fast);
 }
 
 .stat-label {
@@ -248,7 +296,39 @@ onMounted(() => {
 }
 
 .profile-content {
-  padding: 24px 16px;
+  padding: 12px 16px;
+}
+
+.tab-content {
+  background-color: var(--background-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  min-height: 200px;
+}
+
+.tab-panel {
+  padding: 16px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--text-tertiary);
+}
+
+.empty-state .empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.empty-state .empty-text {
+  font-size: 14px;
+  color: var(--text-secondary);
 }
 
 .logout-btn {
