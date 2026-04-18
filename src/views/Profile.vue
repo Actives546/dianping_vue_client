@@ -16,8 +16,13 @@
       
       <div class="user-stats">
         <div class="stat-item">
-          <span class="stat-value">{{ stats.blogs }}</span>
-          <span class="stat-label">博客</span>
+          <span class="stat-value">{{ stats.notes }}</span>
+          <span class="stat-label">笔记</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value">{{ stats.reviews }}</span>
+          <span class="stat-label">评价</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
@@ -33,42 +38,6 @@
     </div>
     
     <div class="profile-content header-safe-area">
-      <div class="menu-section">
-        <div class="menu-item" @click="showToast('我的收藏')">
-          <span class="menu-icon">⭐</span>
-          <span class="menu-text">我的收藏</span>
-          <span class="menu-arrow">›</span>
-        </div>
-        <div class="menu-item" @click="showToast('浏览历史')">
-          <span class="menu-icon">📜</span>
-          <span class="menu-text">浏览历史</span>
-          <span class="menu-arrow">›</span>
-        </div>
-        <div class="menu-item" @click="showToast('我的订单')">
-          <span class="menu-icon">📋</span>
-          <span class="menu-text">我的订单</span>
-          <span class="menu-arrow">›</span>
-        </div>
-      </div>
-      
-      <div class="menu-section">
-        <div class="menu-item" @click="showToast('帮助中心')">
-          <span class="menu-icon">❓</span>
-          <span class="menu-text">帮助中心</span>
-          <span class="menu-arrow">›</span>
-        </div>
-        <div class="menu-item" @click="showToast('关于我们')">
-          <span class="menu-icon">ℹ️</span>
-          <span class="menu-text">关于我们</span>
-          <span class="menu-arrow">›</span>
-        </div>
-        <div class="menu-item" @click="showToast('意见反馈')">
-          <span class="menu-icon">📝</span>
-          <span class="menu-text">意见反馈</span>
-          <span class="menu-arrow">›</span>
-        </div>
-      </div>
-      
       <button class="logout-btn" @click="handleLogout">
         退出登录
       </button>
@@ -99,7 +68,8 @@ const userInfo = ref({
 })
 
 const stats = ref({
-  blogs: 0,
+  notes: 0,
+  reviews: 0,
   followers: 0,
   following: 0
 })
@@ -278,54 +248,7 @@ onMounted(() => {
 }
 
 .profile-content {
-  padding: 12px;
-}
-
-.menu-section {
-  background-color: var(--background-primary);
-  border-radius: var(--radius-xl);
-  margin-bottom: 12px;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-light);
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.menu-item:active {
-  background-color: var(--background-secondary);
-}
-
-.menu-item:last-child {
-  border-bottom: none;
-}
-
-.menu-icon {
-  font-size: 22px;
-  margin-right: 12px;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.menu-text {
-  flex: 1;
-  font-size: 15px;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-.menu-arrow {
-  font-size: 18px;
-  color: var(--text-tertiary);
+  padding: 24px 16px;
 }
 
 .logout-btn {
@@ -333,19 +256,12 @@ onMounted(() => {
   padding: 14px;
   background-color: var(--background-primary);
   color: var(--error-color);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   font-size: 15px;
-  font-weight: 600;
-  margin-top: 12px;
+  font-weight: 500;
   cursor: pointer;
   border: 1px solid var(--error-color);
   transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
-}
-
-.logout-btn:active {
-  background-color: #fff5f5;
-  transform: scale(0.98);
 }
 
 .toast {

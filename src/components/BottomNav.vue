@@ -104,8 +104,9 @@ const currentRoute = computed(() => route.path)
 
 .publish-btn .nav-icon {
   color: #fff;
-  font-size: 28px;
+  font-size: 22px;
   margin-bottom: 0;
   font-weight: 300;
+  line-height: 1;
 }
 </style>
