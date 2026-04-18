@@ -111,4 +111,95 @@ export const shopTypeApi = {
   }
 }
 
+export const blogApi = {
+  createBlog(blogData) {
+    return instance.post('/blog', blogData)
+  },
+  
+  updateBlog(blogData) {
+    return instance.put('/blog', blogData)
+  },
+  
+  getBlogById(id) {
+    return instance.get(`/blog/${id}`)
+  },
+  
+  getBlogList(params = {}) {
+    return instance.get('/blog/page', { params })
+  },
+  
+  deleteBlog(id) {
+    return instance.delete(`/blog/${id}`)
+  },
+  
+  batchDeleteBlogs(ids) {
+    return instance.delete('/blog/batch', { data: ids })
+  }
+}
+
+export const blogCommentApi = {
+  createComment(commentData) {
+    return instance.post('/blog/comment', commentData)
+  },
+  
+  updateComment(commentData) {
+    return instance.put('/blog/comment', commentData)
+  },
+  
+  getCommentById(id) {
+    return instance.get(`/blog/comment/${id}`)
+  },
+  
+  getCommentList(params = {}) {
+    return instance.get('/blog/comment/page', { params })
+  },
+  
+  getCommentsByBlogId(blogId, params = {}) {
+    const { current = 1, size = 10 } = params
+    return instance.get(`/blog/comment/blog/${blogId}?current=${current}&size=${size}`)
+  },
+  
+  deleteComment(id) {
+    return instance.delete(`/blog/comment/${id}`)
+  },
+  
+  batchDeleteComments(ids) {
+    return instance.delete('/blog/comment/batch', { data: ids })
+  }
+}
+
+export const voucherApi = {
+  createVoucher(voucherData) {
+    return instance.post('/voucher', voucherData)
+  },
+  
+  updateVoucher(voucherData) {
+    return instance.put('/voucher', voucherData)
+  },
+  
+  getVoucherById(id) {
+    return instance.get(`/voucher/${id}`)
+  },
+  
+  getVoucherList(params = {}) {
+    return instance.get('/voucher/page', { params })
+  },
+  
+  getVouchersByShopId(shopId) {
+    return instance.get(`/voucher/shop/${shopId}`)
+  },
+  
+  deleteVoucher(id) {
+    return instance.delete(`/voucher/${id}`)
+  },
+  
+  batchDeleteVouchers(ids) {
+    return instance.delete('/voucher/batch', { data: ids })
+  },
+  
+  seckillVoucher(voucherId) {
+    return instance.post(`/voucher/seckill/${voucherId}`)
+  }
+}
+
 export default instance

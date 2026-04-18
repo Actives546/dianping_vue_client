@@ -47,6 +47,24 @@ const routes = [
     name: 'Profile',
     component: () => import('../views/Profile.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/blog/:id',
+    name: 'BlogDetail',
+    component: () => import('../views/BlogDetail.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/voucher-list',
+    name: 'VoucherList',
+    component: () => import('../views/VoucherList.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/voucher/:id',
+    name: 'VoucherDetail',
+    component: () => import('../views/VoucherDetail.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
