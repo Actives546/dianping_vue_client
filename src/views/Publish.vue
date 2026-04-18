@@ -4,42 +4,40 @@
       <router-link to="/home" class="back-btn">
         <span class="back-icon">←</span>
       </router-link>
-      <h1 class="title">发布博客</h1>
+      <h1 class="title">发布点评</h1>
       <div class="placeholder"></div>
     </div>
     
     <div class="page-content header-safe-area">
       <div class="publish-form">
-        <div class="form-section card">
-          <div class="form-title">博客标题</div>
-          <input 
-            type="text" 
-            class="title-input" 
-            placeholder="请输入博客标题"
-            v-model="title"
-            maxlength="50"
-          />
-          <div class="char-count">{{ title.length }}/50</div>
-        </div>
-        
-        <div class="form-section card">
-          <div class="form-title">选择商铺</div>
-          <div class="shop-select" @click="toggleShopSelector">
-            <span class="placeholder-text" v-if="!selectedShop">点击选择商铺（可选）</span>
+        <div class="form-section card shop-section">
+          <div class="form-title">
+            <span class="required-star">*</span>选择商铺
+          </div>
+          <div class="shop-select" :class="{ error: shopError }" @click="toggleShopSelector">
+            <span class="placeholder-text" v-if="!selectedShop">请选择商铺（必填）</span>
             <span class="selected-text" v-else>{{ selectedShop.name }}</span>
             <span class="arrow-icon" :class="{ open: showShopSelector }">›</span>
           </div>
+          <div class="error-tip" v-if="shopError">{{ shopError }}</div>
           
           <div class="shop-selector" v-if="showShopSelector">
-            <div class="search-input-wrapper">
-              <span class="search-icon">🔍</span>
-              <input 
-                type="text" 
-                class="search-input" 
-                placeholder="搜索商铺..."
-                v-model="shopSearchKeyword"
-                @input="searchShops"
-              />
+            <div class="selector-header">
+              <span class="selector-title">选择商铺</span>
+              <span class="close-btn" @click="toggleShopSelector">×</span>
+            </div>
+            
+            <div class="search-wrapper">
+              <div class="search-input-box">
+                <span class="search-icon">🔍</span>
+                <input 
+                  type="text" 
+                  class="search-input" 
+                  placeholder="搜索商铺名称..."
+                  v-model="shopSearchKeyword"
+                  @input="debounceSearch"
+                />
+              </div>
             </div>
             
             <div class="shop-list">
@@ -64,69 +62,98 @@
               </div>
               
               <div class="loading" v-if="loadingShops">
-                加载中...
+                <span class="loading-spinner"></span>
+                搜索中...
               </div>
               
               <div class="empty" v-else-if="shops.length === 0 && !loadingShops">
-                暂无商铺
+                <span class="empty-icon">🏪</span>
+                <span class="empty-text">暂无相关商铺</span>
               </div>
-            </div>
-            
-            <div class="selector-footer">
-              <button class="btn btn-secondary" @click="clearShopSelection">取消选择</button>
-              <button class="btn btn-primary" @click="confirmShopSelection">确定</button>
             </div>
           </div>
         </div>
         
-        <div class="form-section card">
+        <div class="form-section card rating-section">
+          <div class="form-title">
+            <span class="required-star">*</span>评分
+          </div>
+          <div class="rating-container">
+            <div class="rating-stars">
+              <span 
+                class="star" 
+                v-for="i in 5" 
+                :key="i"
+                :class="{ active: i <= rating }"
+                @click="rating = i"
+              >
+                ★
+              </span>
+            </div>
+            <span class="rating-label">{{ ratingText }}</span>
+          </div>
+        </div>
+        
+        <div class="form-section card images-section">
           <div class="form-title">上传图片</div>
           <div class="upload-area">
             <div class="upload-item" v-for="(img, index) in images" :key="index">
               <img :src="img" alt="图片" />
-              <span class="delete-btn" @click="removeImage(index)">×</span>
+              <span class="delete-btn" @click.stop="removeImage(index)">×</span>
             </div>
             <div class="upload-btn" v-if="images.length < 9" @click="uploadImage">
               <span class="plus-icon">+</span>
-              <span class="upload-text">上传图片</span>
+              <span class="upload-text">添加图片</span>
             </div>
           </div>
           <div class="upload-tip">最多上传9张图片</div>
         </div>
         
-        <div class="form-section card">
-          <div class="form-title">博客内容</div>
+        <div class="form-section card content-section">
+          <div class="form-title">
+            <span class="required-star">*</span>点评内容
+          </div>
           <textarea 
             class="content-input" 
-            placeholder="分享你的体验，帮助其他用户做出选择..."
+            placeholder="分享你的消费体验，帮助更多小伙伴做出选择..."
             v-model="content"
             maxlength="1000"
           ></textarea>
-          <div class="char-count">{{ content.length }}/1000</div>
+          <div class="char-count">
+            <span :class="{ 'over-limit': content.length > 1000 }">{{ content.length }}</span>/1000
+          </div>
         </div>
         
-        <button 
-          class="btn btn-primary submit-btn" 
-          @click="submitBlog"
-          :disabled="submitting"
-        >
-          {{ submitting ? '发布中...' : '发布' }}
-        </button>
+        <div class="submit-section">
+          <button 
+            class="btn btn-primary submit-btn" 
+            @click="submitBlog"
+            :disabled="submitting"
+          >
+            <template v-if="submitting">
+              <span class="btn-spinner"></span>
+              发布中...
+            </template>
+            <template v-else>
+              立即发布
+            </template>
+          </button>
+        </div>
       </div>
     </div>
     
     <BottomNav />
     
-    <div class="toast" :class="{ show: showToast }">
+    <div class="mask" v-if="showShopSelector" @click="toggleShopSelector"></div>
+    
+    <div class="toast" :class="{ show: showToast, success: toastType === 'success', error: toastType === 'error' }">
       {{ toastMessage }}
     </div>
-    
-    <div class="mask" v-if="showShopSelector" @click="toggleShopSelector"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { blogApi, shopApi, userApi } from '../api'
 import BottomNav from '../components/BottomNav.vue'
@@ -137,17 +164,27 @@ const title = ref('')
 const content = ref('')
 const images = ref([])
 const selectedShop = ref(null)
+const shopError = ref('')
 const showShopSelector = ref(false)
 const shops = ref([])
 const shopSearchKeyword = ref('')
 const loadingShops = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
+const toastType = ref('')
 const submitting = ref(false)
 const currentUser = ref(null)
 
-const showToastMsg = (message) => {
+let searchTimer = null
+
+const ratingText = computed(() => {
+  const texts = ['', '很差', '较差', '一般', '满意', '非常满意']
+  return texts[rating.value] || ''
+})
+
+const showToastMsg = (message, type = 'info') => {
   toastMessage.value = message
+  toastType.value = type
   showToast.value = true
   setTimeout(() => {
     showToast.value = false
@@ -196,37 +233,42 @@ const fetchShops = async () => {
     if (res.success) {
       shops.value = res.data || []
     } else {
-      showToastMsg(res.errorMsg || '加载商铺失败')
+      console.error('加载商铺失败:', res.errorMsg)
     }
   } catch (error) {
-    showToastMsg(error.message || '加载商铺失败，请稍后重试')
+    console.error('加载商铺失败:', error)
   } finally {
     loadingShops.value = false
   }
 }
 
-const searchShops = () => {
-  fetchShops()
+const debounceSearch = () => {
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+  searchTimer = setTimeout(() => {
+    fetchShops()
+  }, 300)
 }
 
 const toggleShopSelector = () => {
   showShopSelector.value = !showShopSelector.value
-  if (showShopSelector.value && shops.value.length === 0) {
-    fetchShops()
+  if (showShopSelector.value) {
+    shopError.value = ''
+    if (shops.value.length === 0) {
+      fetchShops()
+    }
   }
 }
 
 const selectShop = (shop) => {
   selectedShop.value = shop
-}
-
-const clearShopSelection = () => {
-  selectedShop.value = null
+  shopError.value = ''
   showShopSelector.value = false
 }
 
-const confirmShopSelection = () => {
-  showShopSelector.value = false
+const removeImage = (index) => {
+  images.value.splice(index, 1)
 }
 
 const uploadImage = () => {
@@ -241,23 +283,27 @@ const uploadImage = () => {
   }
 }
 
-const removeImage = (index) => {
-  images.value.splice(index, 1)
-}
-
 const submitBlog = async () => {
-  if (!title.value.trim()) {
-    showToastMsg('请输入博客标题')
+  shopError.value = ''
+  
+  if (!selectedShop.value) {
+    shopError.value = '请选择商铺'
+    showToastMsg('请选择商铺', 'error')
+    return
+  }
+  
+  if (!rating.value) {
+    showToastMsg('请选择评分', 'error')
     return
   }
   
   if (!content.value.trim()) {
-    showToastMsg('请输入博客内容')
+    showToastMsg('请输入点评内容', 'error')
     return
   }
   
   if (!currentUser.value) {
-    showToastMsg('请先登录')
+    showToastMsg('请先登录', 'error')
     return
   }
   
@@ -266,12 +312,9 @@ const submitBlog = async () => {
   try {
     const blogData = {
       userId: currentUser.value.id,
-      title: title.value.trim(),
+      shopId: selectedShop.value.id,
+      title: `${selectedShop.value.name}点评`,
       content: content.value.trim()
-    }
-    
-    if (selectedShop.value) {
-      blogData.shopId = selectedShop.value.id
     }
     
     if (images.value.length > 0) {
@@ -281,19 +324,20 @@ const submitBlog = async () => {
     const res = await blogApi.createBlog(blogData)
     
     if (res.success) {
-      showToastMsg('发布成功')
+      showToastMsg('发布成功', 'success')
       setTimeout(() => {
         title.value = ''
         content.value = ''
         images.value = []
         selectedShop.value = null
-        router.push('/home')
+        rating.value = 0
+        router.push('/blog-list')
       }, 1500)
     } else {
-      showToastMsg(res.errorMsg || '发布失败')
+      showToastMsg(res.errorMsg || '发布失败', 'error')
     }
   } catch (error) {
-    showToastMsg(error.message || '发布失败，请稍后重试')
+    showToastMsg(error.message || '发布失败，请稍后重试', 'error')
   } finally {
     submitting.value = false
   }
@@ -351,7 +395,7 @@ onMounted(() => {
 }
 
 .publish-form {
-  padding: 16px;
+  padding: 12px;
 }
 
 .form-section {
@@ -363,21 +407,13 @@ onMounted(() => {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
 }
 
-.title-input {
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  background-color: var(--background-primary);
-  transition: all var(--transition-fast);
-}
-
-.title-input:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+.required-star {
+  color: var(--error-color);
+  margin-right: 4px;
 }
 
 .shop-select {
@@ -386,9 +422,15 @@ onMounted(() => {
   justify-content: space-between;
   padding: 14px 16px;
   background-color: var(--background-secondary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.shop-select.error {
+  border-color: var(--error-color);
+  background-color: #fff5f5;
 }
 
 .shop-select:active {
@@ -403,6 +445,7 @@ onMounted(() => {
 .selected-text {
   color: var(--text-primary);
   font-size: 14px;
+  font-weight: 500;
 }
 
 .arrow-icon {
@@ -415,19 +458,72 @@ onMounted(() => {
   transform: rotate(90deg);
 }
 
+.error-tip {
+  font-size: 12px;
+  color: var(--error-color);
+  margin-top: 6px;
+}
+
 .shop-selector {
-  margin-top: 12px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 400px;
+  max-height: 70vh;
   background-color: var(--background-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
-.search-input-wrapper {
+.selector-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.selector-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.close-btn:active {
+  background-color: var(--border-light);
+}
+
+.search-wrapper {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-light);
+}
+
+.search-input-box {
+  display: flex;
+  align-items: center;
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-full);
+  padding: 10px 16px;
 }
 
 .search-icon {
@@ -444,8 +540,9 @@ onMounted(() => {
 }
 
 .shop-list {
-  max-height: 300px;
+  flex: 1;
   overflow-y: auto;
+  max-height: 400px;
 }
 
 .shop-option {
@@ -487,6 +584,7 @@ onMounted(() => {
 .shop-option-info {
   flex: 1;
   margin-left: 12px;
+  min-width: 0;
 }
 
 .shop-option-name {
@@ -518,30 +616,51 @@ onMounted(() => {
   color: var(--primary-color);
   font-size: 18px;
   font-weight: bold;
+  margin-left: 8px;
 }
 
-.selector-footer {
+.rating-container {
   display: flex;
+  align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--border-light);
 }
 
-.selector-footer .btn {
-  flex: 1;
-  padding: 12px;
-  font-size: 14px;
-}
-
-.upload-area {
+.rating-stars {
   display: flex;
-  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.star {
+  font-size: 32px;
+  color: #ddd;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.star.active {
+  color: #ffc107;
+  transform: scale(1.1);
+}
+
+.star:hover {
+  transform: scale(1.15);
+}
+
+.rating-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.images-section .upload-area {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
 .upload-item {
-  width: 80px;
-  height: 80px;
+  aspect-ratio: 1;
   position: relative;
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -558,15 +677,15 @@ onMounted(() => {
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   background-color: rgba(0, 0, 0, 0.6);
-  color: var(--background-primary);
+  color: #fff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -576,8 +695,7 @@ onMounted(() => {
 }
 
 .upload-btn {
-  width: 80px;
-  height: 80px;
+  aspect-ratio: 1;
   background-color: var(--background-secondary);
   border-radius: var(--radius-md);
   display: flex;
@@ -591,6 +709,7 @@ onMounted(() => {
 
 .upload-btn:active {
   background-color: var(--border-light);
+  border-color: var(--primary-color);
 }
 
 .plus-icon {
@@ -608,15 +727,15 @@ onMounted(() => {
 .upload-tip {
   font-size: 12px;
   color: var(--text-tertiary);
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
-.content-input {
+.content-section .content-input {
   width: 100%;
-  height: 150px;
+  height: 160px;
   padding: 14px 16px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   font-size: 14px;
   resize: none;
   background-color: var(--background-primary);
@@ -624,24 +743,42 @@ onMounted(() => {
   line-height: 1.6;
 }
 
-.content-input:focus {
+.content-section .content-input:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
 }
 
-.char-count {
+.content-section .char-count {
   text-align: right;
   font-size: 12px;
   color: var(--text-tertiary);
   margin-top: 8px;
 }
 
+.content-section .char-count .over-limit {
+  color: var(--error-color);
+}
+
+.submit-section {
+  padding: 8px 0;
+}
+
 .submit-btn {
   width: 100%;
   padding: 16px;
   font-size: 16px;
-  font-weight: 500;
-  margin-top: 8px;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
 }
 
 .submit-btn:disabled {
@@ -649,17 +786,57 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .loading {
-  text-align: center;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
   color: var(--text-tertiary);
   font-size: 14px;
+  gap: 12px;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-light);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 .empty {
-  text-align: center;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
   color: var(--text-tertiary);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.empty-text {
   font-size: 14px;
 }
 
@@ -680,8 +857,8 @@ onMounted(() => {
   transform: translate(-50%, -50%) scale(0.9);
   background-color: rgba(0, 0, 0, 0.85);
   color: var(--background-primary);
-  padding: 12px 24px;
-  border-radius: var(--radius-md);
+  padding: 14px 28px;
+  border-radius: var(--radius-lg);
   font-size: 14px;
   z-index: 9999;
   opacity: 0;
@@ -693,5 +870,13 @@ onMounted(() => {
 .toast.show {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
+}
+
+.toast.success {
+  background-color: rgba(82, 196, 26, 0.95);
+}
+
+.toast.error {
+  background-color: rgba(255, 71, 87, 0.95);
 }
 </style>

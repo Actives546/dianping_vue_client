@@ -11,6 +11,15 @@
     
     <div 
       class="nav-item" 
+      :class="{ active: currentRoute === '/blog-list' }"
+      @click="$router.push('/blog-list')"
+    >
+      <span class="nav-icon">📝</span>
+      <span class="nav-text">笔记</span>
+    </div>
+    
+    <div 
+      class="nav-item" 
       @click="$router.push('/publish')"
     >
       <div class="publish-btn">
@@ -20,11 +29,11 @@
     
     <div 
       class="nav-item" 
-      :class="{ active: currentRoute === '/message' }"
-      @click="$router.push('/message')"
+      :class="{ active: currentRoute === '/voucher-list' }"
+      @click="$router.push('/voucher-list')"
     >
-      <span class="nav-icon">💬</span>
-      <span class="nav-text">消息</span>
+      <span class="nav-icon">🎫</span>
+      <span class="nav-text">优惠券</span>
     </div>
     
     <div 
@@ -79,7 +88,7 @@ const currentRoute = computed(() => route.path)
 }
 
 .nav-item.active {
-  color: #4a90e2;
+  color: var(--primary-color);
 }
 
 .nav-item.active::before {
@@ -90,12 +99,12 @@ const currentRoute = computed(() => route.path)
   transform: translateX(-50%);
   width: 20px;
   height: 3px;
-  background-color: #4a90e2;
+  background-color: var(--primary-color);
   border-radius: 0 0 3px 3px;
 }
 
 .nav-icon {
-  font-size: 24px;
+  font-size: 22px;
   margin-bottom: 2px;
   line-height: 1;
   width: 24px;
@@ -110,31 +119,31 @@ const currentRoute = computed(() => route.path)
 }
 
 .publish-btn {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #4a90e2 0%, #6bb3f0 100%);
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #ff8c5a 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: -10px;
-  box-shadow: 0 3px 10px rgba(74, 144, 226, 0.3);
+  margin-top: -14px;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
   transition: all var(--transition-fast);
 }
 
 .publish-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 14px rgba(74, 144, 226, 0.4);
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
 }
 
 .publish-btn .nav-icon {
   color: var(--background-primary);
-  font-size: 20px;
+  font-size: 22px;
   margin-bottom: 0;
   font-weight: 300;
   line-height: 1;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
