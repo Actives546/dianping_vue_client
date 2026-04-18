@@ -65,6 +65,12 @@ const routes = [
     name: 'VoucherDetail',
     component: () => import('../views/VoucherDetail.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/blog-list',
+    name: 'BlogList',
+    component: () => import('../views/BlogList.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
