@@ -1164,7 +1164,537 @@ DELETE /shop-type/1
 
 ---
 
-## 五、常量说明
+## 四、优惠券管理接口
+
+优惠券分为两种类型，通过 `type` 字段区分：
+- `type=0`：普通券
+- `type=1`：秒杀券（需要额外传入 `stock`、`beginTime`、`endTime`）
+
+### 1. 新增优惠券
+
+**接口路径：** `POST /voucher`
+
+**接口说明：** 新增优惠券，根据type字段区分普通券和秒杀券。
+- 普通券：只需传入基础信息
+- 秒杀券：需额外传入库存、开始时间、结束时间
+
+**请求参数：** (RequestBody - JSON)
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| shopId | Long | 是 | 关联的商铺ID |
+| title | String | 是 | 优惠券标题 |
+| subTitle | String | 否 | 副标题 |
+| rules | String | 否 | 使用规则 |
+| payValue | Long | 是 | 支付金额（必须大于0） |
+| actualValue | Long | 是 | 抵扣金额（必须大于0） |
+| type | Integer | 否 | 优惠券类型，0-普通券（默认），1-秒杀券 |
+| status | Integer | 否 | 状态，1-正常，2-过期 |
+| stock | Integer | 秒杀券必填 | 库存（秒杀券专用，必须大于等于0） |
+| beginTime | LocalDateTime | 秒杀券必填 | 开始时间（秒杀券专用） |
+| endTime | LocalDateTime | 秒杀券必填 | 结束时间（秒杀券专用，必须晚于开始时间） |
+
+**请求示例1 - 新增普通券：**
+```json
+{
+  "shopId": 1,
+  "title": "满100减20优惠券",
+  "subTitle": "全场通用",
+  "rules": "满100元可用，不可与其他优惠叠加",
+  "payValue": 80,
+  "actualValue": 100,
+  "type": 0,
+  "status": 1
+}
+```
+
+**请求示例2 - 新增秒杀券：**
+```json
+{
+  "shopId": 1,
+  "title": "1元秒杀100元代金券",
+  "subTitle": "限时秒杀",
+  "rules": "每人限抢1张",
+  "payValue": 1,
+  "actualValue": 100,
+  "type": 1,
+  "status": 1,
+  "stock": 100,
+  "beginTime": "2024-01-20T10:00:00",
+  "endTime": "2024-01-20T22:00:00"
+}
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": 1,
+  "total": null
+}
+```
+> 注：data为新增优惠券的ID
+
+**错误返回示例1 - 商铺不存在：**
+```json
+{
+  "success": false,
+  "errorMsg": "商铺不存在",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例2 - 秒杀券缺少库存：**
+```json
+{
+  "success": false,
+  "errorMsg": "秒杀券库存不能为空",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 2. 更新优惠券信息
+
+**接口路径：** `PUT /voucher`
+
+**接口说明：** 更新优惠券信息。如果是秒杀券，可同时更新库存、开始时间、结束时间。
+
+**请求参数：** (RequestBody - JSON)
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 优惠券ID |
+| shopId | Long | 否 | 关联的商铺ID |
+| title | String | 否 | 优惠券标题 |
+| subTitle | String | 否 | 副标题 |
+| rules | String | 否 | 使用规则 |
+| payValue | Long | 否 | 支付金额 |
+| actualValue | Long | 否 | 抵扣金额 |
+| type | Integer | 否 | 优惠券类型 |
+| status | Integer | 否 | 状态 |
+| stock | Integer | 否 | 库存（秒杀券可更新） |
+| beginTime | LocalDateTime | 否 | 开始时间（秒杀券可更新） |
+| endTime | LocalDateTime | 否 | 结束时间（秒杀券可更新） |
+
+**请求示例：**
+```json
+{
+  "id": 1,
+  "title": "更新后的优惠券标题",
+  "stock": 200,
+  "endTime": "2024-01-25T23:59:59"
+}
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回：**
+```json
+{
+  "success": false,
+  "errorMsg": "优惠券不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 3. 根据ID查询优惠券信息
+
+**接口路径：** `GET /voucher/{id}`
+
+**接口说明：** 根据ID查询优惠券详情。如果是秒杀券，会自动关联查询秒杀券信息（库存、开始时间、结束时间）。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 优惠券ID（Path参数） |
+
+**请求示例：**
+```
+GET /voucher/1
+```
+
+**返回示例1 - 普通券：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": {
+    "id": 1,
+    "shopId": 1,
+    "title": "满100减20优惠券",
+    "subTitle": "全场通用",
+    "rules": "满100元可用",
+    "payValue": 80,
+    "actualValue": 100,
+    "type": 0,
+    "status": 1,
+    "stock": null,
+    "beginTime": null,
+    "endTime": null,
+    "createTime": "2024-01-15T10:00:00",
+    "updateTime": "2024-01-15T10:00:00"
+  },
+  "total": null
+}
+```
+
+**返回示例2 - 秒杀券：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": {
+    "id": 2,
+    "shopId": 1,
+    "title": "1元秒杀100元代金券",
+    "subTitle": "限时秒杀",
+    "rules": "每人限抢1张",
+    "payValue": 1,
+    "actualValue": 100,
+    "type": 1,
+    "status": 1,
+    "stock": 100,
+    "beginTime": "2024-01-20T10:00:00",
+    "endTime": "2024-01-20T22:00:00",
+    "createTime": "2024-01-15T10:00:00",
+    "updateTime": "2024-01-15T10:00:00"
+  },
+  "total": null
+}
+```
+
+**返回字段说明：**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| id | Long | 优惠券ID |
+| shopId | Long | 关联的商铺ID |
+| title | String | 优惠券标题 |
+| subTitle | String | 副标题 |
+| rules | String | 使用规则 |
+| payValue | Long | 支付金额 |
+| actualValue | Long | 抵扣金额 |
+| type | Integer | 类型：0-普通券，1-秒杀券 |
+| status | Integer | 状态：1-正常，2-过期 |
+| stock | Integer | 库存（秒杀券专用，普通券为null） |
+| beginTime | LocalDateTime | 开始时间（秒杀券专用，普通券为null） |
+| endTime | LocalDateTime | 结束时间（秒杀券专用，普通券为null） |
+| createTime | LocalDateTime | 创建时间 |
+| updateTime | LocalDateTime | 更新时间 |
+
+**错误返回：**
+```json
+{
+  "success": false,
+  "errorMsg": "优惠券不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 4. 分页查询优惠券信息
+
+**接口路径：** `GET /voucher/page`
+
+**接口说明：** 分页查询优惠券列表，支持按商铺ID和优惠券类型筛选。
+- 不传 `type`：查询所有类型的优惠券
+- `type=0`：只查询普通券
+- `type=1`：只查询秒杀券
+
+**请求参数：** (Query参数)
+
+| 参数名 | 类型 | 必填 | 默认值 | 说明 |
+|--------|------|------|--------|------|
+| current | Integer | 否 | 1 | 当前页码，从1开始 |
+| size | Integer | 否 | 10 | 每页大小，默认10，最大100 |
+| shopId | Long | 否 | null | 商铺ID（按商铺筛选） |
+| type | Integer | 否 | null | 优惠券类型：0-普通券，1-秒杀券 |
+
+**请求示例1 - 查询所有优惠券：**
+```
+GET /voucher/page?current=1&size=10
+```
+
+**请求示例2 - 按商铺筛选：**
+```
+GET /voucher/page?current=1&size=10&shopId=1
+```
+
+**请求示例3 - 查询秒杀券：**
+```
+GET /voucher/page?current=1&size=10&type=1
+```
+
+**请求示例4 - 按商铺+类型筛选：**
+```
+GET /voucher/page?current=1&size=10&shopId=1&type=1
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": [
+    {
+      "id": 1,
+      "shopId": 1,
+      "title": "满100减20优惠券",
+      "subTitle": "全场通用",
+      "rules": "满100元可用",
+      "payValue": 80,
+      "actualValue": 100,
+      "type": 0,
+      "status": 1,
+      "stock": null,
+      "beginTime": null,
+      "endTime": null,
+      "createTime": "2024-01-15T10:00:00",
+      "updateTime": "2024-01-15T10:00:00"
+    },
+    {
+      "id": 2,
+      "shopId": 1,
+      "title": "1元秒杀100元代金券",
+      "subTitle": "限时秒杀",
+      "rules": "每人限抢1张",
+      "payValue": 1,
+      "actualValue": 100,
+      "type": 1,
+      "status": 1,
+      "stock": 100,
+      "beginTime": "2024-01-20T10:00:00",
+      "endTime": "2024-01-20T22:00:00",
+      "createTime": "2024-01-15T10:00:00",
+      "updateTime": "2024-01-15T10:00:00"
+    }
+  ],
+  "total": 25
+}
+```
+> 注：total为总记录数，用于分页计算
+
+---
+
+### 5. 根据商铺ID查询优惠券列表
+
+**接口路径：** `GET /voucher/shop/{shopId}`
+
+**接口说明：** 查询指定商铺下的所有优惠券（包含普通券和秒杀券）。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| shopId | Long | 是 | 商铺ID（Path参数） |
+
+**请求示例：**
+```
+GET /voucher/shop/1
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": [
+    {
+      "id": 1,
+      "shopId": 1,
+      "title": "满100减20优惠券",
+      "type": 0,
+      "status": 1,
+      "stock": null,
+      "beginTime": null,
+      "endTime": null,
+      "createTime": "2024-01-15T10:00:00",
+      "updateTime": "2024-01-15T10:00:00"
+    },
+    {
+      "id": 2,
+      "shopId": 1,
+      "title": "1元秒杀100元代金券",
+      "type": 1,
+      "status": 1,
+      "stock": 100,
+      "beginTime": "2024-01-20T10:00:00",
+      "endTime": "2024-01-20T22:00:00",
+      "createTime": "2024-01-15T10:00:00",
+      "updateTime": "2024-01-15T10:00:00"
+    }
+  ],
+  "total": null
+}
+```
+
+---
+
+### 6. 根据ID删除优惠券
+
+**接口路径：** `DELETE /voucher/{id}`
+
+**接口说明：** 根据ID删除优惠券。如果是秒杀券，会自动删除关联的秒杀券信息。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 优惠券ID（Path参数） |
+
+**请求示例：**
+```
+DELETE /voucher/1
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回：**
+```json
+{
+  "success": false,
+  "errorMsg": "优惠券不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 7. 批量删除优惠券
+
+**接口路径：** `DELETE /voucher/batch`
+
+**接口说明：** 批量删除多个优惠券。会校验所有ID是否都存在，如果有不存在的ID会返回错误。删除时会自动删除关联的秒杀券信息。
+
+**请求参数：** (RequestBody - JSON)
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| - | List<Long> | 是 | 优惠券ID列表（JSON数组） |
+
+**请求示例：**
+```json
+[1, 2, 3]
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例：**
+```json
+{
+  "success": false,
+  "errorMsg": "优惠券不存在，优惠券ID：999",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+## 五、数据实体说明
+
+### Shop（商铺）实体
+
+| 字段名 | 类型 | 数据库字段 | 说明 |
+|--------|------|------------|------|
+| id | Long | id | 主键，自增 |
+| name | String | name | 商铺名称 |
+| typeId | Long | type_id | 商铺类型ID |
+| images | String | images | 商铺图片，多个图片以','隔开 |
+| area | String | area | 商圈 |
+| address | String | address | 地址 |
+| x | Double | x | 经度 |
+| y | Double | y | 纬度 |
+| avgPrice | Long | avg_price | 均价 |
+| sold | Integer | sold | 销量 |
+| comments | Integer | comments | 评论数量 |
+| score | Integer | score | 评分（1~5分，乘10保存） |
+| openHours | String | open_hours | 营业时间 |
+| createTime | LocalDateTime | create_time | 创建时间 |
+| updateTime | LocalDateTime | update_time | 更新时间 |
+| distance | Double | - | 距离（非数据库字段） |
+| shopType | ShopType | - | 关联的商铺类型（非数据库字段） |
+
+### ShopType（商铺类型）实体
+
+| 字段名 | 类型 | 数据库字段 | 说明 |
+|--------|------|------------|------|
+| id | Long | id | 主键，自增 |
+| name | String | name | 类型名称 |
+| icon | String | icon | 图标 |
+| sort | Integer | sort | 顺序 |
+| createTime | LocalDateTime | create_time | 创建时间（JSON忽略） |
+| updateTime | LocalDateTime | update_time | 更新时间（JSON忽略） |
+
+### Voucher（优惠券）实体
+
+| 字段名 | 类型 | 数据库字段 | 说明 |
+|--------|------|------------|------|
+| id | Long | id | 主键，自增 |
+| shopId | Long | shop_id | 关联的商铺ID |
+| title | String | title | 优惠券标题 |
+| subTitle | String | sub_title | 副标题 |
+| rules | String | rules | 使用规则 |
+| payValue | Long | pay_value | 支付金额 |
+| actualValue | Long | actual_value | 抵扣金额 |
+| type | Integer | type | 类型：0-普通券，1-秒杀券 |
+| status | Integer | status | 状态：1-正常，2-过期 |
+| createTime | LocalDateTime | create_time | 创建时间 |
+| updateTime | LocalDateTime | update_time | 更新时间 |
+| stock | Integer | - | 库存（非数据库字段，秒杀券专用，从SeckillVoucher关联查询） |
+| beginTime | LocalDateTime | - | 开始时间（非数据库字段，秒杀券专用，从SeckillVoucher关联查询） |
+| endTime | LocalDateTime | - | 结束时间（非数据库字段，秒杀券专用，从SeckillVoucher关联查询） |
+
+### SeckillVoucher（秒杀券）实体
+
+| 字段名 | 类型 | 数据库字段 | 说明 |
+|--------|------|------------|------|
+| voucherId | Long | voucher_id | 主键，关联的优惠券ID |
+| stock | Integer | stock | 库存 |
+| beginTime | LocalDateTime | begin_time | 开始时间 |
+| endTime | LocalDateTime | end_time | 结束时间 |
+| createTime | LocalDateTime | create_time | 创建时间 |
+| updateTime | LocalDateTime | update_time | 更新时间 |
+
+---
+
+## 六、常量说明
 
 ### 商铺相关常量
 
@@ -1173,3 +1703,834 @@ DELETE /shop-type/1
 | DEFAULT_PAGE_CURRENT | 1 | 默认页码 |
 | DEFAULT_PAGE_SIZE | 10 | 默认每页大小 |
 | MAX_PAGE_SIZE | 100 | 最大每页大小 |
+
+### 优惠券相关常量
+
+| 常量名 | 值 | 说明 |
+|--------|-----|------|
+| VOUCHER_TYPE_NORMAL | 0 | 普通券类型 |
+| VOUCHER_TYPE_SECKILL | 1 | 秒杀券类型 |
+| VOUCHER_STATUS_NORMAL | 1 | 优惠券状态-正常 |
+| VOUCHER_STATUS_EXPIRED | 2 | 优惠券状态-过期 |
+
+---
+
+## 七、博客管理接口
+
+### 1. 新增博客
+
+**接口路径：** `POST /blog`
+
+**接口说明：** 新增博客，标题和内容为必填项。最多支持9张图片，多张图片以英文逗号分隔。
+
+**请求参数：** (RequestBody - JSON)
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| userId | Long | 是 | 用户ID |
+| shopId | Long | 否 | 关联的商铺ID（探店博客时使用） |
+| title | String | 是 | 博客标题 |
+| content | String | 是 | 博客内容 |
+| images | String | 否 | 图片URL，多张以英文逗号分隔，最多9张 |
+| liked | Integer | 否 | 点赞数量，默认0 |
+| comments | Integer | 否 | 评论数量，默认0 |
+
+**请求示例：**
+```json
+{
+  "userId": 1,
+  "shopId": 1,
+  "title": "美食探店之上海老字号",
+  "content": "今天去了一家上海老字号餐厅，味道真的很棒！推荐他们家的红烧肉和小笼包，环境也很有特色...",
+  "images": "https://example.com/image1.jpg,https://example.com/image2.jpg,https://example.com/image3.jpg"
+}
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": 1,
+  "total": null
+}
+```
+> 注：data为新增博客的ID
+
+**错误返回示例1 - 标题为空：**
+```json
+{
+  "success": false,
+  "errorMsg": "博客标题不能为空",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例2 - 图片超过9张：**
+```json
+{
+  "success": false,
+  "errorMsg": "图片数量不能超过9张",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 2. 更新博客信息
+
+**接口路径：** `PUT /blog`
+
+**接口说明：** 更新博客信息，只有传入的字段会被更新。
+
+**请求参数：** (RequestBody - JSON)
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 博客ID |
+| title | String | 否 | 博客标题 |
+| content | String | 否 | 博客内容 |
+| images | String | 否 | 图片URL |
+| liked | Integer | 否 | 点赞数量 |
+
+**请求示例：**
+```json
+{
+  "id": 1,
+  "title": "更新后的博客标题",
+  "content": "更新后的博客内容..."
+}
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例 - 博客不存在：**
+```json
+{
+  "success": false,
+  "errorMsg": "博客不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 3. 根据ID查询博客信息
+
+**接口路径：** `GET /blog/{id}`
+
+**接口说明：** 根据ID查询博客详情，会自动关联查询发布用户的头像和昵称信息。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 博客ID（Path参数） |
+
+**请求示例：**
+```
+GET /blog/1
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": {
+    "id": 1,
+    "shopId": 1,
+    "userId": 1,
+    "icon": "https://example.com/avatar.jpg",
+    "name": "美食达人",
+    "isLike": null,
+    "title": "美食探店之上海老字号",
+    "images": "https://example.com/image1.jpg,https://example.com/image2.jpg",
+    "content": "今天去了一家上海老字号餐厅，味道真的很棒！",
+    "liked": 100,
+    "comments": 25,
+    "createTime": "2024-01-15T10:00:00",
+    "updateTime": "2024-01-15T10:00:00"
+  },
+  "total": null
+}
+```
+
+**返回字段说明：**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| id | Long | 博客ID |
+| shopId | Long | 关联的商铺ID |
+| userId | Long | 发布用户ID |
+| icon | String | 用户头像URL（非数据库字段，关联查询） |
+| name | String | 用户昵称（非数据库字段，关联查询） |
+| isLike | Boolean | 是否已点赞（非数据库字段，预留） |
+| title | String | 博客标题 |
+| images | String | 图片URL，多张以逗号分隔 |
+| content | String | 博客内容 |
+| liked | Integer | 点赞数量 |
+| comments | Integer | 评论数量 |
+| createTime | LocalDateTime | 创建时间 |
+| updateTime | LocalDateTime | 更新时间 |
+
+**错误返回：**
+```json
+{
+  "success": false,
+  "errorMsg": "博客不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 4. 分页查询博客信息
+
+**接口路径：** `GET /blog/page`
+
+**接口说明：** 分页查询博客列表，支持多种筛选条件。
+
+**请求参数：** (Query参数)
+
+| 参数名 | 类型 | 必填 | 默认值 | 说明 |
+|--------|------|------|--------|------|
+| current | Integer | 否 | 1 | 当前页码，从1开始 |
+| size | Integer | 否 | 10 | 每页大小，默认10，最大100 |
+| title | String | 否 | null | 博客标题（模糊匹配） |
+| userId | Long | 否 | null | 用户ID（按发布用户筛选） |
+| shopId | Long | 否 | null | 商铺ID（按关联商铺筛选） |
+
+**请求示例1 - 基本分页查询：**
+```
+GET /blog/page?current=1&size=10
+```
+
+**请求示例2 - 按用户筛选：**
+```
+GET /blog/page?current=1&size=10&userId=1
+```
+
+**请求示例3 - 按标题模糊搜索：**
+```
+GET /blog/page?current=1&size=10&title=美食
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": [
+    {
+      "id": 1,
+      "shopId": 1,
+      "userId": 1,
+      "icon": "https://example.com/avatar1.jpg",
+      "name": "美食达人",
+      "title": "美食探店之上海老字号",
+      "images": "https://example.com/image1.jpg",
+      "content": "今天去了一家上海老字号餐厅...",
+      "liked": 100,
+      "comments": 25,
+      "createTime": "2024-01-15T10:00:00",
+      "updateTime": "2024-01-15T10:00:00"
+    },
+    {
+      "id": 2,
+      "shopId": 2,
+      "userId": 2,
+      "icon": "https://example.com/avatar2.jpg",
+      "name": "旅行家",
+      "title": "周末游玩好去处",
+      "images": "https://example.com/image3.jpg",
+      "content": "周末去了一个新开的公园...",
+      "liked": 50,
+      "comments": 10,
+      "createTime": "2024-01-14T09:00:00",
+      "updateTime": "2024-01-14T09:00:00"
+    }
+  ],
+  "total": 50
+}
+```
+> 注：total为总记录数，用于分页计算
+
+---
+
+### 5. 根据ID删除博客
+
+**接口路径：** `DELETE /blog/{id}`
+
+**接口说明：** 根据ID删除单个博客。删除前会校验博客是否存在。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 博客ID（Path参数） |
+
+**请求示例：**
+```
+DELETE /blog/1
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回：**
+```json
+{
+  "success": false,
+  "errorMsg": "博客不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 6. 批量删除博客
+
+**接口路径：** `DELETE /blog/batch`
+
+**接口说明：** 批量删除多个博客。会校验所有ID是否都存在，如果有不存在的ID会返回错误。
+
+**请求参数：** (RequestBody - JSON)
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| - | List<Long> | 是 | 博客ID列表（JSON数组） |
+
+**请求示例：**
+```json
+[1, 2, 3]
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例：**
+```json
+{
+  "success": false,
+  "errorMsg": "博客不存在，博客ID：999",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+## 八、评论管理接口
+
+### 1. 新增评论
+
+**接口路径：** `POST /blog/comment`
+
+**接口说明：** 新增评论，支持两种类型：
+1. 一级评论：直接对博客进行评论（parentId=0）
+2. 回复评论：对其他评论进行回复（需要指定parentId和answerId）
+
+**安全校验说明：**
+- 新增回复评论时，会校验 `parentId` 和 `answerId` 对应的评论是否存在
+- 校验 `parentId` 对应的父评论是否属于当前博客
+- 校验 `answerId` 对应的回复评论是否属于当前博客和当前父评论
+
+新增评论成功后，会使用数据库原子操作更新对应博客的评论数量（保证并发安全）。
+
+**请求参数：** (RequestBody - JSON)
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| userId | Long | 是 | 评论用户ID |
+| blogId | Long | 是 | 关联的博客ID |
+| parentId | Long | 否 | 父评论ID，一级评论时为0或不传 |
+| answerId | Long | 否 | 回复的评论ID，回复评论时使用 |
+| content | String | 是 | 评论内容 |
+| liked | Integer | 否 | 点赞数量，默认0 |
+| status | Boolean | 否 | 状态，默认false（0-正常） |
+
+**请求示例1 - 新增一级评论：**
+```json
+{
+  "userId": 2,
+  "blogId": 1,
+  "content": "看起来很好吃啊，下次我也想去试试！",
+  "parentId": 0
+}
+```
+
+**请求示例2 - 新增回复评论：**
+```json
+{
+  "userId": 3,
+  "blogId": 1,
+  "content": "同意楼上的看法，这家确实不错！",
+  "parentId": 1,
+  "answerId": 1
+}
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": 1,
+  "total": null
+}
+```
+> 注：data为新增评论的ID
+
+**错误返回示例1 - 内容为空：**
+```json
+{
+  "success": false,
+  "errorMsg": "评论内容不能为空",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例2 - 父评论不存在：**
+```json
+{
+  "success": false,
+  "errorMsg": "父评论不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 2. 更新评论信息
+
+**接口路径：** `PUT /blog/comment`
+
+**接口说明：** 更新评论信息，只有传入的字段会被更新。通常用于更新评论内容或点赞数。
+
+**请求参数：** (RequestBody - JSON)
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 评论ID |
+| content | String | 否 | 评论内容 |
+| liked | Integer | 否 | 点赞数量 |
+| status | Boolean | 否 | 状态 |
+
+**请求示例：**
+```json
+{
+  "id": 1,
+  "content": "更新后的评论内容...",
+  "liked": 10
+}
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例 - 评论不存在：**
+```json
+{
+  "success": false,
+  "errorMsg": "评论不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 3. 根据ID查询评论信息
+
+**接口路径：** `GET /blog/comment/{id}`
+
+**接口说明：** 根据ID查询评论详情。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 评论ID（Path参数） |
+
+**请求示例：**
+```
+GET /blog/comment/1
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": {
+    "id": 1,
+    "userId": 2,
+    "blogId": 1,
+    "parentId": 0,
+    "answerId": null,
+    "content": "看起来很好吃啊，下次我也想去试试！",
+    "liked": 5,
+    "status": false,
+    "createTime": "2024-01-15T12:00:00",
+    "updateTime": "2024-01-15T12:00:00"
+  },
+  "total": null
+}
+```
+
+**返回字段说明：**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| id | Long | 评论ID |
+| userId | Long | 评论用户ID |
+| blogId | Long | 关联的博客ID |
+| parentId | Long | 父评论ID，0表示一级评论 |
+| answerId | Long | 回复的评论ID，null表示不是回复 |
+| content | String | 评论内容 |
+| liked | Integer | 点赞数量 |
+| status | Boolean | 状态，false-正常，true-被举报/禁止查看 |
+| createTime | LocalDateTime | 创建时间 |
+| updateTime | LocalDateTime | 更新时间 |
+
+**错误返回：**
+```json
+{
+  "success": false,
+  "errorMsg": "评论不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 4. 分页查询评论信息
+
+**接口路径：** `GET /blog/comment/page`
+
+**接口说明：** 分页查询评论列表，支持按博客ID和用户ID筛选。
+
+**请求参数：** (Query参数)
+
+| 参数名 | 类型 | 必填 | 默认值 | 说明 |
+|--------|------|------|--------|------|
+| current | Integer | 否 | 1 | 当前页码，从1开始 |
+| size | Integer | 否 | 10 | 每页大小，默认10，最大100 |
+| blogId | Long | 否 | null | 博客ID（按博客筛选） |
+| userId | Long | 否 | null | 用户ID（按评论用户筛选） |
+
+**请求示例1 - 基本分页查询：**
+```
+GET /blog/comment/page?current=1&size=10
+```
+
+**请求示例2 - 按博客筛选：**
+```
+GET /blog/comment/page?current=1&size=10&blogId=1
+```
+
+**请求示例3 - 按用户筛选：**
+```
+GET /blog/comment/page?current=1&size=10&userId=2
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": [
+    {
+      "id": 1,
+      "userId": 2,
+      "blogId": 1,
+      "parentId": 0,
+      "answerId": null,
+      "content": "看起来很好吃啊，下次我也想去试试！",
+      "liked": 5,
+      "status": false,
+      "createTime": "2024-01-15T12:00:00",
+      "updateTime": "2024-01-15T12:00:00"
+    },
+    {
+      "id": 2,
+      "userId": 3,
+      "blogId": 1,
+      "parentId": 1,
+      "answerId": 1,
+      "content": "同意楼上的看法，这家确实不错！",
+      "liked": 3,
+      "status": false,
+      "createTime": "2024-01-15T13:00:00",
+      "updateTime": "2024-01-15T13:00:00"
+    }
+  ],
+  "total": 25
+}
+```
+> 注：total为总记录数，用于分页计算
+
+---
+
+### 5. 根据博客ID查询评论列表（分页）
+
+**接口路径：** `GET /blog/comment/blog/{blogId}`
+
+**接口说明：** 查询指定博客下的评论列表，按创建时间倒序排列，支持分页。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 默认值 | 说明 |
+|--------|------|------|--------|------|
+| blogId | Long | 是 | - | 博客ID（Path参数） |
+| current | Integer | 否 | 1 | 当前页码，从1开始 |
+| size | Integer | 否 | 10 | 每页大小，默认10，最大100 |
+
+**请求示例1 - 基本查询：**
+```
+GET /blog/comment/blog/1
+```
+
+**请求示例2 - 带分页参数：**
+```
+GET /blog/comment/blog/1?current=2&size=20
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": [
+    {
+      "id": 1,
+      "userId": 2,
+      "blogId": 1,
+      "parentId": 0,
+      "answerId": null,
+      "content": "看起来很好吃啊，下次我也想去试试！",
+      "liked": 5,
+      "status": false,
+      "createTime": "2024-01-15T12:00:00",
+      "updateTime": "2024-01-15T12:00:00"
+    },
+    {
+      "id": 2,
+      "userId": 3,
+      "blogId": 1,
+      "parentId": 1,
+      "answerId": 1,
+      "content": "同意楼上的看法，这家确实不错！",
+      "liked": 3,
+      "status": false,
+      "createTime": "2024-01-15T13:00:00",
+      "updateTime": "2024-01-15T13:00:00"
+    }
+  ],
+  "total": 25
+}
+```
+> 注：total为总记录数，用于分页计算
+
+**错误返回示例 - 博客不存在：**
+```json
+{
+  "success": false,
+  "errorMsg": "博客不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 6. 根据ID删除评论
+
+**接口路径：** `DELETE /blog/comment/{id}`
+
+**接口说明：** 根据ID删除单个评论，会级联删除所有子评论（回复评论）。
+
+**级联删除说明：**
+- 当删除父评论时，会自动递归删除所有子评论
+- 使用广度优先搜索（BFS）算法收集所有需要删除的子评论ID
+- 例如：删除评论A，评论B是A的回复，评论C是B的回复，则删除A时会同时删除B和C
+
+删除成功后，会使用数据库原子操作更新对应博客的评论数量（总删除数量 = 1 + 子评论数量），保证并发安全。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| id | Long | 是 | 评论ID（Path参数） |
+
+**请求示例：**
+```
+DELETE /blog/comment/1
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回：**
+```json
+{
+  "success": false,
+  "errorMsg": "评论不存在",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 7. 批量删除评论
+
+**接口路径：** `DELETE /blog/comment/batch`
+
+**接口说明：** 批量删除多个评论。会校验所有ID是否都存在，如果有不存在的ID会返回错误。
+
+**级联删除说明：**
+- 删除的每个评论都会级联删除其所有子评论
+- 会统计每个博客需要删除的评论总数（包括子评论）
+- 使用数据库原子操作更新对应博客的评论数量，保证并发安全
+
+例如：传入ID列表 [1, 2]，其中评论1有2个子评论，评论2有1个子评论，则最终删除的评论总数为 1+2 + 1+1 = 5 条。
+
+**请求参数：** (RequestBody - JSON)
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| - | List<Long> | 是 | 评论ID列表（JSON数组） |
+
+**请求示例：**
+```json
+[1, 2, 3]
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例：**
+```json
+{
+  "success": false,
+  "errorMsg": "评论不存在，评论ID：999",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+## 九、数据实体说明
+
+### Blog（博客）实体
+
+| 字段名 | 类型 | 数据库字段 | 说明 |
+|--------|------|------------|------|
+| id | Long | id | 主键，自增 |
+| shopId | Long | shop_id | 关联的商铺ID |
+| userId | Long | user_id | 发布用户ID |
+| icon | String | - | 用户头像URL（非数据库字段，关联查询） |
+| name | String | - | 用户昵称（非数据库字段，关联查询） |
+| isLike | Boolean | - | 是否已点赞（非数据库字段，预留） |
+| title | String | title | 博客标题 |
+| images | String | images | 图片URL，多张以英文逗号分隔，最多9张 |
+| content | String | content | 博客内容 |
+| liked | Integer | liked | 点赞数量 |
+| comments | Integer | comments | 评论数量 |
+| createTime | LocalDateTime | create_time | 创建时间 |
+| updateTime | LocalDateTime | update_time | 更新时间 |
+
+### BlogComments（评论）实体
+
+| 字段名 | 类型 | 数据库字段 | 说明 |
+|--------|------|------------|------|
+| id | Long | id | 主键，自增 |
+| userId | Long | user_id | 评论用户ID |
+| blogId | Long | blog_id | 关联的博客ID |
+| parentId | Long | parent_id | 父评论ID，0表示一级评论 |
+| answerId | Long | answer_id | 回复的评论ID |
+| content | String | content | 评论内容 |
+| liked | Integer | liked | 点赞数量 |
+| status | Boolean | status | 状态，false-正常，true-被举报/禁止查看 |
+| createTime | LocalDateTime | create_time | 创建时间 |
+| updateTime | LocalDateTime | update_time | 更新时间 |
+
+---
+
+## 十、常量说明
+
+### 博客相关常量
+
+| 常量名 | 值 | 说明 |
+|--------|-----|------|
+| DEFAULT_PAGE_CURRENT | 1 | 默认页码 |
+| DEFAULT_PAGE_SIZE | 10 | 默认每页大小 |
+| MAX_PAGE_SIZE | 100 | 最大每页大小 |
+| MAX_IMAGES_COUNT | 9 | 博客最多图片数量 |
+| IMAGES_SEPARATOR | "," | 图片分隔符 |
+
+### 评论相关常量
+
+| 常量名 | 值 | 说明 |
+|--------|-----|------|
+| COMMENT_INFO_NOT_NULL | "评论信息不能为空" | 评论信息不能为空 |
+| COMMENT_CONTENT_NOT_NULL | "评论内容不能为空" | 评论内容不能为空 |
+| COMMENT_ID_NOT_NULL | "评论ID不能为空" | 评论ID不能为空 |
+| COMMENT_NOT_EXIST | "评论不存在" | 评论不存在 |
+| COMMENT_BLOG_ID_NOT_NULL | "评论关联的博客ID不能为空" | 博客ID不能为空 |
+| COMMENT_PARENT_NOT_EXIST | "父评论不存在" | 父评论不存在 |
+| COMMENT_ANSWER_NOT_EXIST | "回复的评论不存在" | 回复的评论不存在 |
