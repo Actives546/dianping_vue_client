@@ -1,13 +1,13 @@
 <template>
   <div class="home-container">
-    <div class="home-header">
+    <div class="home-header header-fixed">
       <div class="search-bar">
         <span class="search-icon">🔍</span>
         <input type="text" placeholder="搜索商铺、美食、景点" v-model="searchKeyword" />
       </div>
     </div>
     
-    <div class="page-content">
+    <div class="page-content header-safe-area">
       <div class="shop-types-section">
         <div class="section-header">
           <h3 class="section-title">商铺分类</h3>
@@ -78,6 +78,10 @@
         <div class="empty" v-else>
           <span class="empty-icon">🏪</span>
           <span class="empty-text">暂无商铺</span>
+        </div>
+        
+        <div class="no-more-data" v-if="shops.length > 0 && !loadingShops">
+          到底了
         </div>
       </div>
     </div>
@@ -206,22 +210,24 @@ onMounted(() => {
 <style scoped>
 .home-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--background-secondary);
   padding-bottom: 60px;
 }
 
 .home-header {
-  background-color: #ff6b35;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #ff8c5a 100%);
   padding: 16px;
   padding-top: calc(16px + env(safe-area-inset-top));
+  box-shadow: var(--shadow-sm);
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  background-color: #fff;
-  border-radius: 20px;
+  background-color: var(--background-primary);
+  border-radius: var(--radius-full);
   padding: 10px 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .search-icon {
@@ -233,11 +239,12 @@ onMounted(() => {
   flex: 1;
   border: none;
   font-size: 14px;
-  color: #333;
+  color: var(--text-primary);
+  background-color: transparent;
 }
 
 .search-bar input::placeholder {
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .page-content {
@@ -255,18 +262,26 @@ onMounted(() => {
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .see-more {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
   cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.see-more:hover {
+  color: var(--primary-color);
 }
 
 .shop-types-section {
-  background-color: #fff;
+  background-color: var(--background-primary);
   margin-bottom: 8px;
+  border-radius: var(--radius-xl);
+  margin: 12px;
+  box-shadow: var(--shadow-sm);
 }
 
 .shop-types-grid {
@@ -283,28 +298,36 @@ onMounted(() => {
   justify-content: center;
   padding: 8px 4px;
   cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.shop-type-item:active {
+  transform: scale(0.95);
 }
 
 .type-icon {
-  width: 44px;
-  height: 44px;
-  background-color: #fff5f2;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  background-color: var(--primary-light);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 24px;
   margin-bottom: 6px;
 }
 
 .type-name {
   font-size: 12px;
-  color: #333;
+  color: var(--text-primary);
   text-align: center;
 }
 
 .shops-section {
-  background-color: #fff;
+  background-color: var(--background-primary);
+  border-radius: var(--radius-xl);
+  margin: 12px;
+  box-shadow: var(--shadow-sm);
 }
 
 .shops-list {
@@ -314,7 +337,13 @@ onMounted(() => {
 .shop-item {
   display: flex;
   padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.shop-item:active {
+  background-color: var(--background-secondary);
 }
 
 .shop-item:last-child {
@@ -324,10 +353,10 @@ onMounted(() => {
 .shop-image {
   width: 120px;
   height: 90px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   flex-shrink: 0;
-  background-color: #f5f5f5;
+  background-color: var(--background-secondary);
 }
 
 .shop-image img {
@@ -347,7 +376,7 @@ onMounted(() => {
 .shop-name {
   font-size: 15px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -362,13 +391,13 @@ onMounted(() => {
 
 .shop-score {
   font-size: 13px;
-  color: #ff6b35;
+  color: var(--primary-color);
   margin-right: 12px;
 }
 
 .shop-avg-price {
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .shop-location {
@@ -376,7 +405,7 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 4px;
   font-size: 12px;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .location-icon {
@@ -394,16 +423,16 @@ onMounted(() => {
 
 .tag {
   font-size: 11px;
-  color: #ff6b35;
-  background-color: #fff5f2;
+  color: var(--primary-color);
+  background-color: var(--primary-light);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .loading {
   text-align: center;
   padding: 20px;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 14px;
 }
 
@@ -413,7 +442,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .empty-icon {
@@ -425,23 +454,44 @@ onMounted(() => {
   font-size: 14px;
 }
 
+.no-more-data {
+  text-align: center;
+  padding: 16px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  background-color: transparent;
+}
+
+.no-more-data::before,
+.no-more-data::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 1px;
+  background-color: var(--border-color);
+  vertical-align: middle;
+  margin: 0 8px;
+}
+
 .toast {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: #fff;
+  transform: translate(-50%, -50%) scale(0.9);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: var(--background-primary);
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   z-index: 9999;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(4px);
 }
 
 .toast.show {
   opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 </style>
