@@ -31,7 +31,7 @@
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
-  --header-height: 56px;
+  --header-height: 72px;
 }
 
 html {
