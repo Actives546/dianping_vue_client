@@ -1,6 +1,6 @@
 <template>
   <div class="shop-list-container">
-    <div class="page-header">
+    <div class="page-header header-fixed">
       <router-link to="/home" class="back-btn">
         <span class="back-icon">←</span>
       </router-link>
@@ -8,7 +8,7 @@
       <div class="placeholder"></div>
     </div>
     
-    <div class="page-content">
+    <div class="page-content header-safe-area">
       <div class="filter-bar">
         <div class="filter-item" :class="{ active: sortBy === 'default' }" @click="sortBy = 'default'">
           综合排序
@@ -67,8 +67,8 @@
         加载更多
       </div>
       
-      <div class="no-more" v-if="!hasMore && shops.length > 0">
-        没有更多了
+      <div class="no-more-data" v-if="!hasMore && shops.length > 0">
+        到底了
       </div>
     </div>
     
@@ -199,7 +199,7 @@ onMounted(() => {
 <style scoped>
 .shop-list-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--background-secondary);
 }
 
 .page-header {
@@ -208,8 +208,9 @@ onMounted(() => {
   justify-content: space-between;
   padding: 16px;
   padding-top: calc(16px + env(safe-area-inset-top));
-  background-color: #fff;
-  border-bottom: 1px solid #eee;
+  background-color: var(--background-primary);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .back-btn {
@@ -219,13 +220,19 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: #333;
+  color: var(--text-primary);
+  transition: background-color var(--transition-fast);
+  border-radius: var(--radius-md);
+}
+
+.back-btn:active {
+  background-color: var(--background-secondary);
 }
 
 .title {
   font-size: 17px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .placeholder {
@@ -238,23 +245,27 @@ onMounted(() => {
 
 .filter-bar {
   display: flex;
-  background-color: #fff;
+  background-color: var(--background-primary);
   padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-light);
+  margin: 12px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .filter-item {
   flex: 1;
   text-align: center;
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
   padding: 4px 0;
   position: relative;
   cursor: pointer;
+  transition: color var(--transition-fast);
 }
 
 .filter-item.active {
-  color: #ff6b35;
+  color: var(--primary-color);
   font-weight: 500;
 }
 
@@ -266,19 +277,27 @@ onMounted(() => {
   transform: translateX(-50%);
   width: 30px;
   height: 2px;
-  background-color: #ff6b35;
+  background-color: var(--primary-color);
 }
 
 .shops-list {
   padding: 0 16px;
-  background-color: #fff;
+  background-color: var(--background-primary);
+  border-radius: var(--radius-lg);
+  margin: 12px;
+  box-shadow: var(--shadow-sm);
 }
 
 .shop-item {
   display: flex;
   padding: 16px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-light);
   cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.shop-item:active {
+  background-color: var(--background-secondary);
 }
 
 .shop-item:last-child {
@@ -288,10 +307,10 @@ onMounted(() => {
 .shop-image {
   width: 120px;
   height: 90px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   flex-shrink: 0;
-  background-color: #f5f5f5;
+  background-color: var(--background-secondary);
 }
 
 .shop-image img {
@@ -311,7 +330,7 @@ onMounted(() => {
 .shop-name {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -326,19 +345,19 @@ onMounted(() => {
 
 .shop-score {
   font-size: 14px;
-  color: #ff6b35;
+  color: var(--primary-color);
   margin-right: 12px;
 }
 
 .shop-sold {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
   margin-right: 12px;
 }
 
 .shop-avg-price {
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .shop-location {
@@ -346,7 +365,7 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 6px;
   font-size: 12px;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 .location-icon {
@@ -364,18 +383,18 @@ onMounted(() => {
 
 .tag {
   font-size: 11px;
-  color: #ff6b35;
-  background-color: #fff5f2;
+  color: var(--primary-color);
+  background-color: var(--primary-light);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .loading {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 14px;
-  background-color: #fff;
+  background-color: var(--background-primary);
 }
 
 .empty {
@@ -384,8 +403,8 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  color: #999;
-  background-color: #fff;
+  color: var(--text-tertiary);
+  background-color: var(--background-primary);
 }
 
 .empty-icon {
@@ -400,37 +419,53 @@ onMounted(() => {
 .load-more {
   text-align: center;
   padding: 16px;
-  color: #ff6b35;
+  color: var(--primary-color);
   font-size: 14px;
-  background-color: #fff;
+  background-color: var(--background-primary);
   cursor: pointer;
+  border-radius: var(--radius-lg);
+  margin: 0 12px 12px;
+  box-shadow: var(--shadow-sm);
 }
 
-.no-more {
+.no-more-data {
   text-align: center;
   padding: 16px;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 13px;
-  background-color: #fff;
+  background-color: transparent;
+}
+
+.no-more-data::before,
+.no-more-data::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 1px;
+  background-color: var(--border-color);
+  vertical-align: middle;
+  margin: 0 8px;
 }
 
 .toast {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: #fff;
+  transform: translate(-50%, -50%) scale(0.9);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: var(--background-primary);
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   z-index: 9999;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(4px);
 }
 
 .toast.show {
   opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 </style>

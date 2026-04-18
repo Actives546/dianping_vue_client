@@ -16,7 +16,7 @@
   --border-color: #e0e0e0;
   --border-light: #f0f0f0;
   --background-primary: #ffffff;
-  --background-secondary: #f5f5f5;
+  --background-secondary: #f0f7ff;
   --error-color: #ff4757;
   --success-color: #52c41a;
   --warning-color: #faad14;
@@ -31,6 +31,7 @@
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
+  --header-height: 56px;
 }
 
 html {
@@ -98,6 +99,21 @@ input::placeholder, textarea::placeholder {
   background-color: var(--background-secondary);
 }
 
+/* 顶部导航栏样式 */
+.header-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background-color: var(--background-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.header-safe-area {
+  padding-top: calc(var(--header-height) + env(safe-area-inset-top));
+}
+
 /* 底部导航栏样式 */
 .bottom-nav {
   position: fixed;
@@ -148,6 +164,11 @@ input::placeholder, textarea::placeholder {
   font-size: 22px;
   margin-bottom: 2px;
   line-height: 1;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bottom-nav .publish-btn {
@@ -170,9 +191,34 @@ input::placeholder, textarea::placeholder {
 
 .bottom-nav .publish-btn .nav-icon {
   color: var(--background-primary);
-  font-size: 28px;
+  font-size: 24px;
   margin-bottom: 0;
   font-weight: 300;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 到底了样式 */
+.no-more-data {
+  text-align: center;
+  padding: 16px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  background-color: transparent;
+}
+
+.no-more-data::before,
+.no-more-data::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 1px;
+  background-color: var(--border-color);
+  vertical-align: middle;
+  margin: 0 8px;
 }
 
 /* 页面内容区域（避开底部导航栏） */

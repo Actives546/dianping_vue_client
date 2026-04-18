@@ -1,6 +1,6 @@
 <template>
   <div class="profile-container">
-    <div class="profile-header">
+    <div class="profile-header header-fixed">
       <div class="user-info">
         <div class="user-avatar">
           <img :src="userInfo.icon || defaultAvatar" :alt="userInfo.nickName" />
@@ -32,7 +32,7 @@
       </div>
     </div>
     
-    <div class="profile-content">
+    <div class="profile-content header-safe-area">
       <div class="menu-section">
         <div class="menu-item" @click="showToast('我的收藏')">
           <span class="menu-icon">⭐</span>
@@ -169,14 +169,15 @@ onMounted(() => {
 <style scoped>
 .profile-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--background-secondary);
   padding-bottom: 60px;
 }
 
 .profile-header {
-  background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+  background: linear-gradient(135deg, #4a90e2 0%, #6bb3f0 100%);
   padding: 20px;
   padding-top: calc(20px + env(safe-area-inset-top));
+  box-shadow: var(--shadow-md);
 }
 
 .user-info {
@@ -186,11 +187,12 @@ onMounted(() => {
 }
 
 .user-avatar {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  box-shadow: var(--shadow-sm);
 }
 
 .user-avatar img {
@@ -205,62 +207,73 @@ onMounted(() => {
 }
 
 .user-name {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
-  color: #fff;
+  color: var(--background-primary);
   margin-bottom: 4px;
 }
 
 .user-phone {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .edit-btn {
-  width: 36px;
-  height: 36px;
-  background-color: rgba(255, 255, 255, 0.2);
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.25);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.edit-btn:active {
+  background-color: rgba(255, 255, 255, 0.35);
 }
 
 .edit-icon {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .user-stats {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
   padding: 16px 0;
+  backdrop-filter: blur(4px);
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: transform var(--transition-fast);
+}
+
+.stat-item:active {
+  transform: scale(0.95);
 }
 
 .stat-value {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
-  color: #fff;
+  color: var(--background-primary);
   margin-bottom: 4px;
 }
 
 .stat-label {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .stat-divider {
   width: 1px;
-  height: 30px;
+  height: 36px;
   background-color: rgba(255, 255, 255, 0.3);
 }
 
@@ -269,18 +282,24 @@ onMounted(() => {
 }
 
 .menu-section {
-  background-color: #fff;
-  border-radius: 12px;
+  background-color: var(--background-primary);
+  border-radius: var(--radius-xl);
   margin-bottom: 12px;
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .menu-item {
   display: flex;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-light);
   cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.menu-item:active {
+  background-color: var(--background-secondary);
 }
 
 .menu-item:last-child {
@@ -288,56 +307,66 @@ onMounted(() => {
 }
 
 .menu-icon {
-  font-size: 20px;
+  font-size: 22px;
   margin-right: 12px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .menu-text {
   flex: 1;
   font-size: 15px;
-  color: #333;
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
 .menu-arrow {
   font-size: 18px;
-  color: #ccc;
+  color: var(--text-tertiary);
 }
 
 .logout-btn {
   width: 100%;
   padding: 14px;
-  background-color: #fff;
-  color: #ff4757;
-  border-radius: 12px;
+  background-color: var(--background-primary);
+  color: var(--error-color);
+  border-radius: var(--radius-xl);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   margin-top: 12px;
   cursor: pointer;
-  border: 1px solid #ff4757;
-  transition: all 0.3s;
+  border: 1px solid var(--error-color);
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
-.logout-btn:hover {
+.logout-btn:active {
   background-color: #fff5f5;
+  transform: scale(0.98);
 }
 
 .toast {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: #fff;
+  transform: translate(-50%, -50%) scale(0.9);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: var(--background-primary);
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   z-index: 9999;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(4px);
 }
 
 .toast.show {
   opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 </style>
