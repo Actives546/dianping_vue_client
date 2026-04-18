@@ -25,7 +25,8 @@
   "homepage": "https://github.com/Actives546/dianping_vue_client#readme",
   "dependencies": {
     "vue": "^3.4.0",
-    "vue-router": "^4.2.0"
+    "vue-router": "^4.2.0",
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",

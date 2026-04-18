@@ -1,25 +1,29 @@
 <template>
   <div class="register-container">
     <div class="register-header">
-      <router-link to="/login" class="back-btn">
-        <span class="back-icon">←</span>
-      </router-link>
-      <h1 class="title">注册账号</h1>
-      <div class="placeholder"></div>
+      <div class="logo">
+        <span class="logo-icon">📍</span>
+        <span class="logo-text">点评</span>
+      </div>
+      <p class="slogan">加入我们，发现更多好店</p>
     </div>
     
     <div class="register-form">
-      <div class="input-group">
+      <h2 class="form-title">注册账号</h2>
+      
+      <div class="input-group" :class="{ error: phoneError }">
         <label>手机号</label>
         <input 
           type="tel" 
           v-model="phone" 
           placeholder="请输入手机号"
           maxlength="11"
+          @blur="validatePhoneField"
         />
+        <span class="error-msg" v-if="phoneError">{{ phoneError }}</span>
       </div>
       
-      <div class="input-group code-input-group">
+      <div class="input-group code-input-group" :class="{ error: codeError }">
         <label>验证码</label>
         <div class="code-input-wrapper">
           <input 
@@ -27,52 +31,65 @@
             v-model="code" 
             placeholder="请输入验证码"
             maxlength="6"
+            @blur="validateCodeField"
           />
           <button 
             class="send-code-btn" 
-            :disabled="countdown > 0 || !isValidPhone"
-            @click="sendCode"
+            :disabled="countdown > 0 || !canSendCode"
+            @click="handleSendCode"
           >
             {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
           </button>
         </div>
+        <span class="error-msg" v-if="codeError">{{ codeError }}</span>
       </div>
       
-      <div class="input-group">
-        <label>昵称</label>
+      <div class="input-group" :class="{ error: nickNameError }">
+        <label>昵称（选填）</label>
         <input 
           type="text" 
           v-model="nickName" 
-          placeholder="请输入昵称（选填）"
+          placeholder="请输入昵称"
           maxlength="20"
+          @blur="validateNickNameField"
         />
+        <span class="error-msg" v-if="nickNameError">{{ nickNameError }}</span>
       </div>
       
-      <div class="input-group">
+      <div class="input-group" :class="{ error: passwordError }">
         <label>设置密码</label>
         <input 
           type="password" 
           v-model="password" 
-          placeholder="请设置密码"
+          placeholder="请设置密码（6-20位）"
+          @blur="validatePasswordField"
         />
+        <span class="error-msg" v-if="passwordError">{{ passwordError }}</span>
       </div>
       
-      <div class="input-group">
+      <div class="input-group" :class="{ error: confirmPasswordError }">
         <label>确认密码</label>
         <input 
           type="password" 
           v-model="confirmPassword" 
           placeholder="请再次输入密码"
+          @blur="validateConfirmPasswordField"
         />
+        <span class="error-msg" v-if="confirmPasswordError">{{ confirmPasswordError }}</span>
       </div>
       
       <button 
         class="btn btn-primary register-btn" 
-        :disabled="!canRegister"
+        :disabled="!canRegister || loading"
         @click="handleRegister"
       >
-        注册
+        {{ loading ? '注册中...' : '注册' }}
       </button>
+      
+      <div class="register-footer">
+        <span class="footer-text">已有账号？</span>
+        <router-link to="/login" class="login-link">立即登录</router-link>
+      </div>
       
       <div class="agreement">
         <span class="agreement-text">注册即表示同意</span>
@@ -88,112 +105,187 @@
   </div>
 </template>
 
-<script>
-import { ref, computed } from 'vue'
+<script setup>
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { userApi } from '../api'
+import { 
+  validatePhone, 
+  validateCode, 
+  validatePassword, 
+  validateConfirmPassword,
+  validateNickName
+} from '../utils/validate'
 
-export default {
-  name: 'Register',
-  setup() {
-    const router = useRouter()
+const router = useRouter()
+
+const phone = ref('')
+const code = ref('')
+const nickName = ref('')
+const password = ref('')
+const confirmPassword = ref('')
+const countdown = ref(0)
+const showToast = ref(false)
+const toastMessage = ref('')
+const loading = ref(false)
+
+const phoneError = ref('')
+const codeError = ref('')
+const nickNameError = ref('')
+const passwordError = ref('')
+const confirmPasswordError = ref('')
+
+const isValidPhone = computed(() => {
+  return /^1[3-9]\d{9}$/.test(phone.value)
+})
+
+const canSendCode = computed(() => {
+  return isValidPhone.value && countdown.value === 0
+})
+
+const canRegister = computed(() => {
+  if (!isValidPhone.value) return false
+  if (code.value.length !== 6) return false
+  if (password.value.length < 6 || password.value.length > 20) return false
+  if (password.value !== confirmPassword.value) return false
+  return true
+})
+
+watch(password, () => {
+  if (confirmPassword.value) {
+    validateConfirmPasswordField()
+  }
+})
+
+const showToastMsg = (message) => {
+  toastMessage.value = message
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 2000)
+}
+
+const validatePhoneField = () => {
+  const result = validatePhone(phone.value)
+  phoneError.value = result.valid ? '' : result.message
+}
+
+const validateCodeField = () => {
+  const result = validateCode(code.value)
+  codeError.value = result.valid ? '' : result.message
+}
+
+const validateNickNameField = () => {
+  const result = validateNickName(nickName.value)
+  nickNameError.value = result.valid ? '' : result.message
+}
+
+const validatePasswordField = () => {
+  const result = validatePassword(password.value)
+  passwordError.value = result.valid ? '' : result.message
+}
+
+const validateConfirmPasswordField = () => {
+  const result = validateConfirmPassword(password.value, confirmPassword.value)
+  confirmPasswordError.value = result.valid ? '' : result.message
+}
+
+const handleSendCode = async () => {
+  if (!isValidPhone.value) {
+    phoneError.value = '请输入正确的手机号'
+    return
+  }
+  
+  phoneError.value = ''
+  
+  try {
+    const res = await userApi.sendCode(phone.value)
+    if (res.success) {
+      showToastMsg('验证码已发送')
+      countdown.value = 60
+      const timer = setInterval(() => {
+        countdown.value--
+        if (countdown.value <= 0) {
+          clearInterval(timer)
+        }
+      }, 1000)
+    } else {
+      showToastMsg(res.errorMsg || '发送失败')
+    }
+  } catch (error) {
+    showToastMsg(error.message || '发送失败，请稍后重试')
+  }
+}
+
+const handleRegister = async () => {
+  phoneError.value = ''
+  codeError.value = ''
+  nickNameError.value = ''
+  passwordError.value = ''
+  confirmPasswordError.value = ''
+  
+  let hasError = false
+  
+  const phoneResult = validatePhone(phone.value)
+  if (!phoneResult.valid) {
+    phoneError.value = phoneResult.message
+    hasError = true
+  }
+  
+  const codeResult = validateCode(code.value)
+  if (!codeResult.valid) {
+    codeError.value = codeResult.message
+    hasError = true
+  }
+  
+  if (nickName.value) {
+    const nickNameResult = validateNickName(nickName.value)
+    if (!nickNameResult.valid) {
+      nickNameError.value = nickNameResult.message
+      hasError = true
+    }
+  }
+  
+  const passwordResult = validatePassword(password.value)
+  if (!passwordResult.valid) {
+    passwordError.value = passwordResult.message
+    hasError = true
+  }
+  
+  const confirmPasswordResult = validateConfirmPassword(password.value, confirmPassword.value)
+  if (!confirmPasswordResult.valid) {
+    confirmPasswordError.value = confirmPasswordResult.message
+    hasError = true
+  }
+  
+  if (hasError) return
+  
+  loading.value = true
+  
+  const userData = {
+    phone: phone.value,
+    password: password.value
+  }
+  
+  if (nickName.value) {
+    userData.nickName = nickName.value
+  }
+  
+  try {
+    const res = await userApi.register(userData)
     
-    const phone = ref('')
-    const code = ref('')
-    const nickName = ref('')
-    const password = ref('')
-    const confirmPassword = ref('')
-    const countdown = ref(0)
-    const showToast = ref(false)
-    const toastMessage = ref('')
-    
-    const isValidPhone = computed(() => {
-      return /^1[3-9]\d{9}$/.test(phone.value)
-    })
-    
-    const canRegister = computed(() => {
-      if (!isValidPhone.value) return false
-      if (code.value.length !== 6) return false
-      if (password.value.length < 1) return false
-      if (password.value !== confirmPassword.value) return false
-      return true
-    })
-    
-    const showToastMessage = (message) => {
-      toastMessage.value = message
-      showToast.value = true
+    if (res.success) {
+      showToastMsg('注册成功，请登录')
       setTimeout(() => {
-        showToast.value = false
-      }, 2000)
+        router.push('/login')
+      }, 1500)
+    } else {
+      showToastMsg(res.errorMsg || '注册失败')
     }
-    
-    const sendCode = async () => {
-      if (!isValidPhone.value) {
-        showToastMessage('请输入正确的手机号')
-        return
-      }
-      
-      try {
-        const res = await userApi.sendCode(phone.value)
-        if (res.success) {
-          showToastMessage('验证码已发送')
-          countdown.value = 60
-          const timer = setInterval(() => {
-            countdown.value--
-            if (countdown.value <= 0) {
-              clearInterval(timer)
-            }
-          }, 1000)
-        } else {
-          showToastMessage(res.errorMsg || '发送失败')
-        }
-      } catch (error) {
-        showToastMessage('发送失败，请稍后重试')
-      }
-    }
-    
-    const handleRegister = async () => {
-      if (!canRegister.value) return
-      
-      const userData = {
-        phone: phone.value,
-        password: password.value
-      }
-      
-      if (nickName.value) {
-        userData.nickName = nickName.value
-      }
-      
-      try {
-        const res = await userApi.register(userData)
-        
-        if (res.success) {
-          showToastMessage('注册成功，请登录')
-          setTimeout(() => {
-            router.push('/login')
-          }, 1000)
-        } else {
-          showToastMessage(res.errorMsg || '注册失败')
-        }
-      } catch (error) {
-        showToastMessage('注册失败，请稍后重试')
-      }
-    }
-    
-    return {
-      phone,
-      code,
-      nickName,
-      password,
-      confirmPassword,
-      countdown,
-      showToast,
-      toastMessage,
-      isValidPhone,
-      canRegister,
-      sendCode,
-      handleRegister
-    }
+  } catch (error) {
+    showToastMsg(error.message || '注册失败，请稍后重试')
+  } finally {
+    loading.value = false
   }
 }
 </script>
@@ -201,40 +293,53 @@ export default {
 <style scoped>
 .register-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #fff5f2 0%, #ffe8e0 100%);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .register-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  background-color: #fff;
-  border-bottom: 1px solid #eee;
+  text-align: center;
+  padding: 40px 0 20px;
 }
 
-.back-btn {
-  width: 32px;
-  height: 32px;
+.logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  color: #333;
+  margin-bottom: 8px;
 }
 
-.title {
-  font-size: 18px;
-  font-weight: 500;
-  color: #333;
+.logo-icon {
+  font-size: 32px;
+  margin-right: 6px;
 }
 
-.placeholder {
-  width: 32px;
+.logo-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #ff6b35;
+}
+
+.slogan {
+  font-size: 13px;
+  color: #999;
 }
 
 .register-form {
-  padding: 20px;
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.form-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .input-group {
@@ -255,13 +360,23 @@ export default {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 16px;
-  background-color: #fff;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .input-group input:focus {
   border-color: #ff6b35;
   box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.input-group.error input {
+  border-color: #ff4757;
+}
+
+.error-msg {
+  display: block;
+  font-size: 12px;
+  color: #ff4757;
+  margin-top: 4px;
 }
 
 .code-input-group .code-input-wrapper {
@@ -308,9 +423,25 @@ export default {
   opacity: 0.6;
 }
 
-.agreement {
+.register-footer {
   text-align: center;
   margin-top: 20px;
+  font-size: 14px;
+}
+
+.footer-text {
+  color: #666;
+}
+
+.login-link {
+  color: #ff6b35;
+  margin-left: 4px;
+  font-weight: 500;
+}
+
+.agreement {
+  text-align: center;
+  margin-top: 16px;
   font-size: 12px;
   color: #999;
 }

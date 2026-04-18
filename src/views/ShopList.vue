@@ -80,142 +80,120 @@
   </div>
 </template>
 
-<script>
-import { ref, computed, onMounted, watch } from 'vue'
+<script setup>
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { shopApi, shopTypeApi } from '../api'
 import BottomNav from '../components/BottomNav.vue'
 
-export default {
-  name: 'ShopList',
-  components: {
-    BottomNav
-  },
-  setup() {
-    const route = useRoute()
-    const router = useRouter()
-    
-    const typeId = ref(parseInt(route.params.typeId) || 0)
-    const pageTitle = ref('商铺列表')
-    const shops = ref([])
-    const loading = ref(false)
-    const showToast = ref(false)
-    const toastMessage = ref('')
-    const sortBy = ref('default')
-    const currentPage = ref(1)
-    const hasMore = ref(true)
-    
-    const showToastMessage = (message) => {
-      toastMessage.value = message
-      showToast.value = true
-      setTimeout(() => {
-        showToast.value = false
-      }, 2000)
-    }
-    
-    const getShopImage = (shop) => {
-      if (shop.images) {
-        const imageList = shop.images.split(',')
-        if (imageList.length > 0) {
-          return imageList[0]
-        }
-      }
-      return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=restaurant%20storefront%20modern%20food%20shop&image_size=square_hd'
-    }
-    
-    const formatScore = (score) => {
-      if (!score) return '暂无'
-      return (score / 10).toFixed(1)
-    }
-    
-    const fetchShopTypeInfo = async () => {
-      if (typeId.value === 0) {
-        pageTitle.value = '全部商铺'
-        return
-      }
-      
-      try {
-        const res = await shopTypeApi.getAllShopTypes()
-        if (res.success && res.data) {
-          const type = res.data.find(t => t.id === typeId.value)
-          if (type) {
-            pageTitle.value = type.name
-          }
-        }
-      } catch (error) {
-        console.error('获取商铺类型失败:', error)
-      }
-    }
-    
-    const fetchShops = async (isLoadMore = false) => {
-      if (loading.value) return
-      
-      loading.value = true
-      
-      try {
-        const params = {
-          current: isLoadMore ? currentPage.value : 1,
-          size: 10
-        }
-        
-        const res = await shopApi.getShopList(params)
-        
-        if (res.success) {
-          const newShops = res.data || []
-          
-          if (isLoadMore) {
-            shops.value = [...shops.value, ...newShops]
-          } else {
-            shops.value = newShops
-          }
-          
-          hasMore.value = newShops.length >= 10
-        } else {
-          showToastMessage(res.errorMsg || '加载商铺失败')
-        }
-      } catch (error) {
-        showToastMessage('加载商铺失败，请稍后重试')
-      } finally {
-        loading.value = false
-      }
-    }
-    
-    const loadMore = () => {
-      currentPage.value++
-      fetchShops(true)
-    }
-    
-    const viewShopDetail = (shop) => {
-      showToastMessage(`查看商铺详情: ${shop.name}`)
-    }
-    
-    watch(sortBy, () => {
-      currentPage.value = 1
-      shops.value = []
-      hasMore.value = true
-      fetchShops()
-    })
-    
-    onMounted(() => {
-      fetchShopTypeInfo()
-      fetchShops()
-    })
-    
-    return {
-      pageTitle,
-      shops,
-      loading,
-      showToast,
-      toastMessage,
-      sortBy,
-      hasMore,
-      getShopImage,
-      formatScore,
-      loadMore,
-      viewShopDetail
+const route = useRoute()
+const router = useRouter()
+
+const typeId = ref(parseInt(route.params.typeId) || 0)
+const pageTitle = ref('商铺列表')
+const shops = ref([])
+const loading = ref(false)
+const showToast = ref(false)
+const toastMessage = ref('')
+const sortBy = ref('default')
+const currentPage = ref(1)
+const hasMore = ref(true)
+
+const showToastMsg = (message) => {
+  toastMessage.value = message
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 2000)
+}
+
+const getShopImage = (shop) => {
+  if (shop.images) {
+    const imageList = shop.images.split(',')
+    if (imageList.length > 0) {
+      return imageList[0]
     }
   }
+  return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=restaurant%20storefront%20modern%20food%20shop&image_size=square_hd'
 }
+
+const formatScore = (score) => {
+  if (!score) return '暂无'
+  return (score / 10).toFixed(1)
+}
+
+const fetchShopTypeInfo = async () => {
+  if (typeId.value === 0) {
+    pageTitle.value = '全部商铺'
+    return
+  }
+  
+  try {
+    const res = await shopTypeApi.getAllShopTypes()
+    if (res.success && res.data) {
+      const type = res.data.find(t => t.id === typeId.value)
+      if (type) {
+        pageTitle.value = type.name
+      }
+    }
+  } catch (error) {
+    console.error('获取商铺类型失败:', error)
+  }
+}
+
+const fetchShops = async (isLoadMore = false) => {
+  if (loading.value) return
+  
+  loading.value = true
+  
+  try {
+    const params = {
+      current: isLoadMore ? currentPage.value : 1,
+      size: 10
+    }
+    
+    const res = await shopApi.getShopList(params)
+    
+    if (res.success) {
+      const newShops = res.data || []
+      
+      if (isLoadMore) {
+        shops.value = [...shops.value, ...newShops]
+      } else {
+        shops.value = newShops
+      }
+      
+      hasMore.value = newShops.length >= 10
+    } else {
+      showToastMsg(res.errorMsg || '加载商铺失败')
+    }
+  } catch (error) {
+    showToastMsg(error.message || '加载商铺失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadMore = () => {
+  currentPage.value++
+  fetchShops(true)
+}
+
+const viewShopDetail = (shop) => {
+  showToastMsg(`查看商铺详情: ${shop.name}`)
+}
+
+watch(sortBy, () => {
+  currentPage.value = 1
+  shops.value = []
+  hasMore.value = true
+  fetchShops()
+})
+
+onMounted(() => {
+  fetchShopTypeInfo()
+  fetchShops()
+})
 </script>
 
 <style scoped>

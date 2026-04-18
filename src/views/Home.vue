@@ -90,139 +90,117 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { shopApi, shopTypeApi } from '../api'
 import BottomNav from '../components/BottomNav.vue'
 
-export default {
-  name: 'Home',
-  components: {
-    BottomNav
-  },
-  setup() {
-    const router = useRouter()
-    
-    const searchKeyword = ref('')
-    const shopTypes = ref([])
-    const shops = ref([])
-    const loadingTypes = ref(false)
-    const loadingShops = ref(false)
-    const showToast = ref(false)
-    const toastMessage = ref('')
-    
-    const showToastMessage = (message) => {
-      toastMessage.value = message
-      showToast.value = true
-      setTimeout(() => {
-        showToast.value = false
-      }, 2000)
-    }
-    
-    const getTypeIcon = (name) => {
-      const iconMap = {
-        '美食': '🍜',
-        '娱乐': '🎮',
-        '酒店': '🏨',
-        '丽人': '💄',
-        '休闲娱乐': '🎡',
-        'KTV': '🎤',
-        '酒吧': '🍺',
-        '按摩/足疗': '💆',
-        '洗浴/汗蒸': '🛁',
-        '健身': '🏋️',
-        '瑜伽': '🧘',
-        '美甲': '💅',
-        '美发': '💇',
-        '美容/SPA': '💆‍♀️',
-        '宠物': '🐱',
-        '亲子': '👶',
-        '学习培训': '📚',
-        '生活服务': '🔧',
-        '医疗健康': '🏥',
-        '电影': '🎬',
-        '演出': '🎭',
-        '展览': '🖼️'
-      }
-      return iconMap[name] || '🏪'
-    }
-    
-    const getShopImage = (shop) => {
-      if (shop.images) {
-        const imageList = shop.images.split(',')
-        if (imageList.length > 0) {
-          return imageList[0]
-        }
-      }
-      return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=restaurant%20storefront%20modern%20food%20shop&image_size=square_hd'
-    }
-    
-    const formatScore = (score) => {
-      if (!score) return '暂无'
-      return (score / 10).toFixed(1)
-    }
-    
-    const fetchShopTypes = async () => {
-      loadingTypes.value = true
-      try {
-        const res = await shopTypeApi.getAllShopTypes()
-        if (res.success) {
-          shopTypes.value = res.data || []
-        } else {
-          showToastMessage(res.errorMsg || '加载分类失败')
-        }
-      } catch (error) {
-        showToastMessage('加载分类失败，请稍后重试')
-      } finally {
-        loadingTypes.value = false
-      }
-    }
-    
-    const fetchShops = async () => {
-      loadingShops.value = true
-      try {
-        const res = await shopApi.getShopList({ current: 1, size: 10 })
-        if (res.success) {
-          shops.value = res.data || []
-        } else {
-          showToastMessage(res.errorMsg || '加载商铺失败')
-        }
-      } catch (error) {
-        showToastMessage('加载商铺失败，请稍后重试')
-      } finally {
-        loadingShops.value = false
-      }
-    }
-    
-    const goToShopList = (typeId) => {
-      if (typeId) {
-        router.push(`/shop-list/${typeId}`)
-      } else {
-        router.push('/shop-list/0')
-      }
-    }
-    
-    onMounted(() => {
-      fetchShopTypes()
-      fetchShops()
-    })
-    
-    return {
-      searchKeyword,
-      shopTypes,
-      shops,
-      loadingTypes,
-      loadingShops,
-      showToast,
-      toastMessage,
-      getTypeIcon,
-      getShopImage,
-      formatScore,
-      goToShopList
+const router = useRouter()
+
+const searchKeyword = ref('')
+const shopTypes = ref([])
+const shops = ref([])
+const loadingTypes = ref(false)
+const loadingShops = ref(false)
+const showToast = ref(false)
+const toastMessage = ref('')
+
+const showToastMsg = (message) => {
+  toastMessage.value = message
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 2000)
+}
+
+const getTypeIcon = (name) => {
+  const iconMap = {
+    '美食': '🍜',
+    '娱乐': '🎮',
+    '酒店': '🏨',
+    '丽人': '💄',
+    '休闲娱乐': '🎡',
+    'KTV': '🎤',
+    '酒吧': '🍺',
+    '按摩/足疗': '💆',
+    '洗浴/汗蒸': '🛁',
+    '健身': '🏋️',
+    '瑜伽': '🧘',
+    '美甲': '💅',
+    '美发': '💇',
+    '美容/SPA': '💆‍♀️',
+    '宠物': '🐱',
+    '亲子': '👶',
+    '学习培训': '📚',
+    '生活服务': '🔧',
+    '医疗健康': '🏥',
+    '电影': '🎬',
+    '演出': '🎭',
+    '展览': '🖼️'
+  }
+  return iconMap[name] || '🏪'
+}
+
+const getShopImage = (shop) => {
+  if (shop.images) {
+    const imageList = shop.images.split(',')
+    if (imageList.length > 0) {
+      return imageList[0]
     }
   }
+  return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=restaurant%20storefront%20modern%20food%20shop&image_size=square_hd'
 }
+
+const formatScore = (score) => {
+  if (!score) return '暂无'
+  return (score / 10).toFixed(1)
+}
+
+const fetchShopTypes = async () => {
+  loadingTypes.value = true
+  try {
+    const res = await shopTypeApi.getAllShopTypes()
+    if (res.success) {
+      shopTypes.value = res.data || []
+    } else {
+      showToastMsg(res.errorMsg || '加载分类失败')
+    }
+  } catch (error) {
+    showToastMsg(error.message || '加载分类失败，请稍后重试')
+  } finally {
+    loadingTypes.value = false
+  }
+}
+
+const fetchShops = async () => {
+  loadingShops.value = true
+  try {
+    const res = await shopApi.getShopList({ current: 1, size: 10 })
+    if (res.success) {
+      shops.value = res.data || []
+    } else {
+      showToastMsg(res.errorMsg || '加载商铺失败')
+    }
+  } catch (error) {
+    showToastMsg(error.message || '加载商铺失败，请稍后重试')
+  } finally {
+    loadingShops.value = false
+  }
+}
+
+const goToShopList = (typeId) => {
+  if (typeId) {
+    router.push(`/shop-list/${typeId}`)
+  } else {
+    router.push('/shop-list/0')
+  }
+}
+
+onMounted(() => {
+  fetchShopTypes()
+  fetchShops()
+})
 </script>
 
 <style scoped>
