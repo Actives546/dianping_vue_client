@@ -79,11 +79,11 @@
             </div>
             
             <div class="blog-stats">
-              <span class="stat-item">
-                <span class="stat-icon">❤️</span>
+              <span class="stat-item" @click.stop="likeBlog(blog)">
+                <span class="stat-icon" :class="{ 'liked': blog.isLiked }">❤️</span>
                 <span class="stat-value">{{ blog.liked || 0 }}</span>
               </span>
-              <span class="stat-item">
+              <span class="stat-item" @click.stop>
                 <span class="stat-icon">💬</span>
                 <span class="stat-value">{{ blog.comments || 0 }}</span>
               </span>
@@ -137,14 +137,37 @@ const currentPage = ref(1)
 const hasMore = ref(true)
 const showToast = ref(false)
 const toastMessage = ref('')
+const toastType = ref('')
 const currentUser = ref(null)
+const likedBlogs = ref(new Set())
 
-const showToastMsg = (message) => {
+const showToastMsg = (message, type = 'info') => {
   toastMessage.value = message
+  toastType.value = type
   showToast.value = true
   setTimeout(() => {
     showToast.value = false
   }, 2000)
+}
+
+const likeBlog = (blog) => {
+  if (!currentUser.value) {
+    showToastMsg('请先登录', 'error')
+    return
+  }
+  
+  const blogKey = `blog_${blog.id}`
+  if (likedBlogs.value.has(blogKey)) {
+    showToastMsg('已经点过赞了', 'info')
+    return
+  }
+  
+  likedBlogs.value.add(blogKey)
+  blog.isLiked = true
+  if (!blog.liked) blog.liked = 0
+  blog.liked++
+  
+  showToastMsg('点赞成功', 'success')
 }
 
 const formatTime = (time) => {
@@ -645,5 +668,19 @@ onMounted(() => {
 .toast.show {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
+}
+
+.toast.success {
+  background-color: rgba(82, 196, 26, 0.95);
+}
+
+.toast.error {
+  background-color: rgba(255, 71, 87, 0.95);
+}
+
+.stat-icon.liked {
+  color: var(--error-color);
+  transform: scale(1.1);
+  transition: all 0.2s;
 }
 </style>
