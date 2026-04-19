@@ -2075,7 +2075,7 @@ DELETE /blog/1
 | answerId | Long | 否 | 回复的评论ID，回复评论时使用 |
 | content | String | 是 | 评论内容 |
 | liked | Integer | 否 | 点赞数量，默认0 |
-| status | Boolean | 否 | 状态，默认false（0-正常） |
+| status | Boolean | 否 | 状态，默认true（正常），false（被举报/禁止查看） |
 
 **请求示例1 - 新增一级评论：**
 ```json
@@ -2137,6 +2137,11 @@ DELETE /blog/1
 
 **接口说明：** 更新评论信息，只有传入的字段会被更新。通常用于更新评论内容或点赞数。
 
+**权限校验说明：**
+- 用户必须已登录
+- 只能更新自己发布的评论
+- 校验评论的 `userId` 是否等于当前登录用户的ID
+
 **请求参数：** (RequestBody - JSON)
 
 | 参数名 | 类型 | 必填 | 说明 |
@@ -2165,11 +2170,31 @@ DELETE /blog/1
 }
 ```
 
-**错误返回示例 - 评论不存在：**
+**错误返回示例1 - 评论不存在：**
 ```json
 {
   "success": false,
   "errorMsg": "评论不存在",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例2 - 用户未登录：**
+```json
+{
+  "success": false,
+  "errorMsg": "用户未登录",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例3 - 无权操作：**
+```json
+{
+  "success": false,
+  "errorMsg": "无权操作该评论",
   "data": null,
   "total": null
 }
@@ -2388,6 +2413,11 @@ GET /blog/comment/blog/1?current=2&size=20
 
 **接口说明：** 根据ID删除单个评论，会级联删除所有子评论（回复评论）。
 
+**权限校验说明：**
+- 用户必须已登录
+- 只能删除自己发布的评论
+- 校验评论的 `userId` 是否等于当前登录用户的ID
+
 **级联删除说明：**
 - 当删除父评论时，会自动递归删除所有子评论
 - 使用广度优先搜索（BFS）算法收集所有需要删除的子评论ID
@@ -2416,11 +2446,31 @@ DELETE /blog/comment/1
 }
 ```
 
-**错误返回：**
+**错误返回示例1 - 评论不存在：**
 ```json
 {
   "success": false,
   "errorMsg": "评论不存在",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例2 - 用户未登录：**
+```json
+{
+  "success": false,
+  "errorMsg": "用户未登录",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例3 - 无权操作：**
+```json
+{
+  "success": false,
+  "errorMsg": "无权操作该评论",
   "data": null,
   "total": null
 }
@@ -2433,6 +2483,12 @@ DELETE /blog/comment/1
 **接口路径：** `DELETE /blog/comment/batch`
 
 **接口说明：** 批量删除多个评论。会校验所有ID是否都存在，如果有不存在的ID会返回错误。
+
+**权限校验说明：**
+- 用户必须已登录
+- 只能删除自己发布的评论
+- 所有传入的评论ID都必须属于当前登录用户
+- 只要有一个评论不属于当前用户，操作就会失败
 
 **级联删除说明：**
 - 删除的每个评论都会级联删除其所有子评论
@@ -2462,11 +2518,31 @@ DELETE /blog/comment/1
 }
 ```
 
-**错误返回示例：**
+**错误返回示例1 - 评论不存在：**
 ```json
 {
   "success": false,
   "errorMsg": "评论不存在，评论ID：999",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例2 - 用户未登录：**
+```json
+{
+  "success": false,
+  "errorMsg": "用户未登录",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例3 - 无权操作：**
+```json
+{
+  "success": false,
+  "errorMsg": "无权操作该评论，评论ID：5",
   "data": null,
   "total": null
 }
@@ -2505,7 +2581,7 @@ DELETE /blog/comment/1
 | answerId | Long | answer_id | 回复的评论ID |
 | content | String | content | 评论内容 |
 | liked | Integer | liked | 点赞数量 |
-| status | Boolean | status | 状态，false-正常，true-被举报/禁止查看 |
+| status | Boolean | status | 状态，true-正常，false-被举报/禁止查看 |
 | createTime | LocalDateTime | create_time | 创建时间 |
 | updateTime | LocalDateTime | update_time | 更新时间 |
 
@@ -2523,6 +2599,16 @@ DELETE /blog/comment/1
 | MAX_IMAGES_COUNT | 9 | 博客最多图片数量 |
 | IMAGES_SEPARATOR | "," | 图片分隔符 |
 
+### 博客相关常量（续）
+
+| 常量名 | 值 | 说明 |
+|--------|-----|------|
+| DEFAULT_LIKED | 0 | 默认点赞数 |
+| DEFAULT_COMMENTS | 0 | 默认评论数 |
+| USER_ID_NOT_NULL | "用户ID不能为空" | 用户ID不能为空 |
+| USER_NOT_EXIST | "用户不存在" | 用户不存在 |
+| IMAGES_COUNT_EXCEED | "图片数量不能超过9张" | 图片数量超限 |
+
 ### 评论相关常量
 
 | 常量名 | 值 | 说明 |
@@ -2531,6 +2617,495 @@ DELETE /blog/comment/1
 | COMMENT_CONTENT_NOT_NULL | "评论内容不能为空" | 评论内容不能为空 |
 | COMMENT_ID_NOT_NULL | "评论ID不能为空" | 评论ID不能为空 |
 | COMMENT_NOT_EXIST | "评论不存在" | 评论不存在 |
+| COMMENT_ID_LIST_NOT_NULL | "评论ID列表不能为空" | 评论ID列表不能为空 |
 | COMMENT_BLOG_ID_NOT_NULL | "评论关联的博客ID不能为空" | 博客ID不能为空 |
 | COMMENT_PARENT_NOT_EXIST | "父评论不存在" | 父评论不存在 |
 | COMMENT_ANSWER_NOT_EXIST | "回复的评论不存在" | 回复的评论不存在 |
+| COMMENT_PARENT_NOT_IN_BLOG | "父评论不属于当前博客" | 父评论不属于当前博客 |
+| COMMENT_ANSWER_NOT_IN_BLOG | "回复的评论不属于当前博客" | 回复的评论不属于当前博客 |
+| COMMENT_ANSWER_NOT_IN_PARENT | "回复的评论不属于当前父评论" | 回复的评论不属于当前父评论 |
+| COMMENT_NOT_OWNER | "无权操作该评论" | 无权操作该评论 |
+| USER_NOT_LOGIN | "用户未登录" | 用户未登录 |
+| DEFAULT_PARENT_ID | 0 | 默认父评论ID（一级评论） |
+| COMMENT_STATUS_NORMAL | true | 评论状态-正常 |
+| COMMENT_STATUS_BLOCKED | false | 评论状态-被举报/禁止查看 |
+| DELTA_ONE | 1 | 变化量1 |
+
+---
+
+## 十一、关注管理接口
+
+### 1. 关注用户
+
+**接口路径：** `POST /follow/{followUserId}`
+
+**接口说明：** 关注指定用户。需要登录状态。
+
+**业务逻辑说明：**
+- 校验被关注用户ID不能为空
+- 校验不能关注自己
+- 校验被关注用户是否存在
+- 校验是否已经关注（重复关注会失败）
+- 创建关注关系，记录关注时间
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| followUserId | Long | 是 | 被关注用户ID（Path参数） |
+
+**请求头：**
+```
+authorization: {token}
+```
+
+**请求示例：**
+```
+POST /follow/2
+Header: authorization: 550e8400e29b41d4a716446655440000
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": "关注成功",
+  "total": null
+}
+```
+
+**错误返回示例1 - 不能关注自己：**
+```json
+{
+  "success": false,
+  "errorMsg": "不能关注自己",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例2 - 用户不存在：**
+```json
+{
+  "success": false,
+  "errorMsg": "用户不存在",
+  "data": null,
+  "total": null
+}
+```
+
+**错误返回示例3 - 已经关注：**
+```json
+{
+  "success": false,
+  "errorMsg": "已经关注了该用户",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 2. 取消关注
+
+**接口路径：** `DELETE /follow/{followUserId}`
+
+**接口说明：** 取消关注指定用户。需要登录状态。
+
+**业务逻辑说明：**
+- 校验被关注用户ID不能为空
+- 校验是否已关注（未关注时取消会失败）
+- 删除关注关系
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| followUserId | Long | 是 | 被关注用户ID（Path参数） |
+
+**请求头：**
+```
+authorization: {token}
+```
+
+**请求示例：**
+```
+DELETE /follow/2
+Header: authorization: 550e8400e29b41d4a716446655440000
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": "取消关注成功",
+  "total": null
+}
+```
+
+**错误返回示例 - 未关注：**
+```json
+{
+  "success": false,
+  "errorMsg": "未关注该用户",
+  "data": null,
+  "total": null
+}
+```
+
+---
+
+### 3. 查询是否关注了某个用户
+
+**接口路径：** `GET /follow/or/not/{followUserId}`
+
+**接口说明：** 查询当前登录用户是否关注了指定用户。需要登录状态。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| followUserId | Long | 是 | 被关注用户ID（Path参数） |
+
+**请求头：**
+```
+authorization: {token}
+```
+
+**请求示例：**
+```
+GET /follow/or/not/2
+Header: authorization: 550e8400e29b41d4a716446655440000
+```
+
+**返回示例1 - 已关注：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": true,
+  "total": null
+}
+```
+
+**返回示例2 - 未关注：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": false,
+  "total": null
+}
+```
+
+---
+
+### 4. 查询用户的关注数量
+
+**接口路径：** `GET /follow/count/follow/{userId}`
+
+**接口说明：** 查询指定用户关注了多少人。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| userId | Long | 是 | 用户ID（Path参数） |
+
+**请求示例：**
+```
+GET /follow/count/follow/1
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": 15,
+  "total": null
+}
+```
+> 注：data为该用户关注的人数
+
+---
+
+### 5. 查询用户的粉丝数量
+
+**接口路径：** `GET /follow/count/fans/{userId}`
+
+**接口说明：** 查询指定用户有多少粉丝。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| userId | Long | 是 | 用户ID（Path参数） |
+
+**请求示例：**
+```
+GET /follow/count/fans/1
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": 128,
+  "total": null
+}
+```
+> 注：data为该用户的粉丝数
+
+---
+
+### 6. 查询共同关注
+
+**接口路径：** `GET /follow/common/{targetUserId}`
+
+**接口说明：** 查询当前登录用户和目标用户的共同关注列表。需要登录状态。
+
+**业务逻辑说明：**
+- 获取当前登录用户ID
+- 查询当前用户关注的所有用户ID列表
+- 查询目标用户关注的所有用户ID列表
+- 取两个列表的交集（共同关注的用户）
+- 根据共同关注的用户ID列表查询用户详情（昵称、头像）
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| targetUserId | Long | 是 | 目标用户ID（Path参数） |
+
+**请求头：**
+```
+authorization: {token}
+```
+
+**请求示例：**
+```
+GET /follow/common/3
+Header: authorization: 550e8400e29b41d4a716446655440000
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": [
+    {
+      "id": 5,
+      "nickName": "美食达人",
+      "icon": "https://example.com/avatar5.jpg"
+    },
+    {
+      "id": 8,
+      "nickName": "旅行家",
+      "icon": "https://example.com/avatar8.jpg"
+    }
+  ],
+  "total": null
+}
+```
+
+**返回字段说明：**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| id | Long | 用户ID |
+| nickName | String | 用户昵称 |
+| icon | String | 用户头像URL |
+
+**返回示例（无共同关注）：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": [],
+  "total": null
+}
+```
+
+---
+
+### 7. 分页查询用户的关注列表
+
+**接口路径：** `GET /follow/list/follow/{userId}`
+
+**接口说明：** 分页查询指定用户关注的用户列表，按关注时间倒序排列。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 默认值 | 说明 |
+|--------|------|------|--------|------|
+| userId | Long | 是 | - | 用户ID（Path参数） |
+| current | Integer | 否 | 1 | 当前页码，从1开始 |
+| size | Integer | 否 | 10 | 每页大小，默认10，最大100 |
+
+**请求示例1 - 基本查询：**
+```
+GET /follow/list/follow/1
+```
+
+**请求示例2 - 带分页参数：**
+```
+GET /follow/list/follow/1?current=2&size=20
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": [
+    {
+      "id": 2,
+      "nickName": "美食达人",
+      "icon": "https://example.com/avatar2.jpg",
+      "followTime": "2024-01-15T10:00:00"
+    },
+    {
+      "id": 3,
+      "nickName": "旅行家",
+      "icon": "https://example.com/avatar3.jpg",
+      "followTime": "2024-01-14T09:00:00"
+    }
+  ],
+  "total": 15
+}
+```
+> 注：total为总记录数，用于分页计算
+
+**返回字段说明：**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| id | Long | 用户ID |
+| nickName | String | 用户昵称 |
+| icon | String | 用户头像URL |
+| followTime | LocalDateTime | 关注时间 |
+
+---
+
+### 8. 分页查询用户的粉丝列表
+
+**接口路径：** `GET /follow/list/fans/{userId}`
+
+**接口说明：** 分页查询指定用户的粉丝列表，按关注时间倒序排列。
+
+**请求参数：**
+
+| 参数名 | 类型 | 必填 | 默认值 | 说明 |
+|--------|------|------|--------|------|
+| userId | Long | 是 | - | 用户ID（Path参数） |
+| current | Integer | 否 | 1 | 当前页码，从1开始 |
+| size | Integer | 否 | 10 | 每页大小，默认10，最大100 |
+
+**请求示例1 - 基本查询：**
+```
+GET /follow/list/fans/1
+```
+
+**请求示例2 - 带分页参数：**
+```
+GET /follow/list/fans/1?current=1&size=50
+```
+
+**返回示例：**
+```json
+{
+  "success": true,
+  "errorMsg": null,
+  "data": [
+    {
+      "id": 10,
+      "nickName": "用户A",
+      "icon": "https://example.com/avatar10.jpg",
+      "followTime": "2024-01-15T12:00:00"
+    },
+    {
+      "id": 11,
+      "nickName": "用户B",
+      "icon": "https://example.com/avatar11.jpg",
+      "followTime": "2024-01-15T11:00:00"
+    }
+  ],
+  "total": 128
+}
+```
+> 注：total为总记录数，用于分页计算
+
+**返回字段说明：**
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| id | Long | 粉丝用户ID |
+| nickName | String | 粉丝昵称 |
+| icon | String | 粉丝头像URL |
+| followTime | LocalDateTime | 粉丝关注该用户的时间 |
+
+---
+
+## 十二、数据实体说明
+
+### Follow（关注）实体
+
+| 字段名 | 类型 | 数据库字段 | 说明 |
+|--------|------|------------|------|
+| id | Long | id | 主键，自增 |
+| userId | Long | user_id | 关注者用户ID |
+| followUserId | Long | follow_user_id | 被关注者用户ID |
+| createTime | LocalDateTime | create_time | 关注时间 |
+
+**关联说明：**
+- `userId` 关联 `tb_user` 表的 `id` 字段（关注者）
+- `followUserId` 关联 `tb_user` 表的 `id` 字段（被关注者）
+
+**数据库表：** `tb_follow`
+
+**唯一约束建议：** 建议为 `(user_id, follow_user_id)` 添加唯一索引，防止重复关注
+
+---
+
+## 十三、常量说明
+
+### 关注相关常量
+
+| 常量名 | 值 | 说明 |
+|--------|-----|------|
+| DEFAULT_PAGE_CURRENT | 1 | 默认页码 |
+| DEFAULT_PAGE_SIZE | 10 | 默认每页大小 |
+| MAX_PAGE_SIZE | 100 | 最大每页大小 |
+
+| 常量名 | 值 | 说明 |
+|--------|-----|------|
+| FOLLOW_USER_ID_NOT_NULL | "被关注用户ID不能为空" | 被关注用户ID不能为空 |
+| CANNOT_FOLLOW_SELF | "不能关注自己" | 不能关注自己 |
+| USER_NOT_EXIST | "用户不存在" | 用户不存在 |
+| ALREADY_FOLLOWED | "已经关注了该用户" | 重复关注错误提示 |
+| NOT_FOLLOWED | "未关注该用户" | 未关注时取消关注错误提示 |
+
+| 常量名 | 值 | 说明 |
+|--------|-----|------|
+| FOLLOW_SUCCESS | "关注成功" | 关注成功提示 |
+| FOLLOW_FAIL | "关注失败" | 关注失败提示 |
+| UNFOLLOW_SUCCESS | "取消关注成功" | 取消关注成功提示 |
+| UNFOLLOW_FAIL | "取消关注失败" | 取消关注失败提示 |
+
+### 关注日志常量
+
+| 常量名 | 值 | 说明 |
+|--------|-----|------|
+| LOG_FOLLOW | "关注用户，被关注用户ID：{}" | 关注操作日志 |
+| LOG_UNFOLLOW | "取消关注，被关注用户ID：{}" | 取消关注操作日志 |
+| LOG_IS_FOLLOW | "查询是否关注用户，被关注用户ID：{}" | 查询是否关注日志 |
+| LOG_FOLLOW_COUNT | "查询关注数量，用户ID：{}" | 查询关注数量日志 |
+| LOG_FANS_COUNT | "查询粉丝数量，用户ID：{}" | 查询粉丝数量日志 |
+| LOG_COMMON_FOLLOW | "查询共同关注，目标用户ID：{}" | 查询共同关注日志 |
+| LOG_FOLLOW_LIST | "查询关注列表，用户ID：{}，当前页：{}，每页大小：{}" | 查询关注列表日志 |
+| LOG_FANS_LIST | "查询粉丝列表，用户ID：{}，当前页：{}，每页大小：{}" | 查询粉丝列表日志 |
